@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ student.get_full_name|default:student.username }} - Details{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'school:parent_dashboard' %}">Parent Dashboard</a></li>
+            <li class="breadcrumb-item active">{{ student.get_full_name|default:student.username }}</li>
+        </ol>
+    </nav>
+    <h1>{{ student.get_full_name|default:student.username }}</h1>
+    <p class="text-muted">
+        {{ relationship }} | Class: {{ academic_class.name|default:"N/A" }} | Admission: {{ profile.admission_number|default:"N/A" }}
+        {% if status == 'Graduated' %}
+            <span class="badge bg-success ms-2">Graduated</span>
+        {% elif status == 'Withdrawn' %}
+            <span class="badge bg-warning text-dark ms-2">Withdrawn</span>
+        {% endif %}
+    </p>
+</div>
+
+{% if current_term %}
+<div class="alert alert-info">
+    <i class="bi bi-calendar-event me-2"></i>
+    <strong>Current Term:</strong> {{ current_term.get_name_display }}
+</div>
+{% endif %}
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-value">{{ test_results|length }}</div>
+            <div class="stat-label">Tests</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card accent">
+            <div class="stat-value">{{ exam_results|length }}</div>
+            <div class="stat-label">Exams</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card success">
+            <div class="stat-value">{{ term_results|length }}</div>
+            <div class="stat-label">Term Results</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-value">{{ report_cards|length }}</div>
+            <div class="stat-label">Report Cards</div>
+        </div>
+    </div>
+</div>
+
+{% if term_results %}
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="bi bi-bar-chart-line me-2"></i>Term Results
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Term</th>
+                        <th>Class</th>
+                        <th>Average Score</th>
+                        <th>Subjects</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in term_results %}
+                    {% with tr=item.result grade=item.grade %}
+                    <tr>
+                        <td>{{ tr.term.get_name_display }}</td>
+                        <td>{{ tr.academic_class.name }}</td>
+                        <td><strong>{{ tr.average_score }}%</strong>
+                            {% if grade %}
+                                <span class="badge bg-secondary ms-2">{{ grade.name }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ tr.total_subjects }}</td>
+                    </tr>
+                    {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clipboard-check me-2"></i>Recent Test Results</span>
+                <a href="{% url 'students:my_results' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if test_results %}
+                    {% for item in test_results %}
+                    {% with tr=item.result grade=item.grade %}
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <div>
+                            <strong>{{ tr.test.title }}</strong>
+                            <div class="text-muted small">{{ tr.test.subject.name }} - {{ tr.test.academic_class.name }}</div>
+                        </div>
+                        <span class="badge {% if tr.get_percentage >= 70 %}bg-success{% elif tr.get_percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}">
+                            {{ tr.score }}/{{ tr.test.max_score }}
+                            {% if grade %}
+                                <span class="badge bg-secondary ms-2">{{ grade.name }}</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endwith %}
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <h4>No test results yet</h4>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-journal-check me-2"></i>Recent Exam Results</span>
+                <a href="{% url 'students:my_results' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if exam_results %}
+                    {% for item in exam_results %}
+                    {% with er=item.result grade=item.grade %}
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <div>
+                            <strong>{{ er.exam.title }}</strong>
+                            <div class="text-muted small">{{ er.exam.subject.name }} - {{ er.exam.academic_class.name }}</div>
+                        </div>
+                        <span class="badge {% if er.get_percentage >= 70 %}bg-success{% elif er.get_percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}">
+                            {{ er.score }}/{{ er.exam.max_score }}
+                            {% if grade %}
+                                <span class="badge bg-secondary ms-2">{{ grade.name }}</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endwith %}
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <h4>No exam results yet</h4>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if report_cards %}
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="bi bi-award me-2"></i>Report Cards
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Term</th>
+                        <th>Class</th>
+                        <th>Average Score</th>
+                        <th>Total Subjects</th>
+                        <th>Class Teacher Remark</th>
+                        <th>Principal Remark</th>
+                        <th>Generated</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for card in report_cards %}
+                    <tr>
+                        <td>{{ card.term.get_name_display }}</td>
+                        <td>{{ card.academic_class.name }}</td>
+                        <td><strong>{{ card.average_score }}%</strong></td>
+                        <td>{{ card.total_subjects }}</td>
+                        <td>{{ card.class_teacher_remark|truncatechars:50|default:"-" }}</td>
+                        <td>{{ card.principal_remark|truncatechars:50|default:"-" }}</td>
+                        <td>{{ card.generated_at|date:"M d, Y" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

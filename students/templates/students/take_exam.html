@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+
+{% block title %}Take Exam - {{ exam.title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'students:student_subjects' %}">Subjects</a></li>
+            <li class="breadcrumb-item active">Take Exam</li>
+        </ol>
+    </nav>
+    <h1>{{ exam.title }}</h1>
+    <p class="text-muted">{{ exam.subject.name }} - {{ exam.academic_class.name }} | {{ exam.term.get_name_display }}</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Exam Info Card -->
+        <div class="card mb-4">
+            <div class="card-header assessment-header" style="background: linear-gradient(135deg, #d63031 0%, #e17055 100%);">
+                <h5 class="mb-0">
+                    <i class="bi bi-journal-check me-2"></i>{{ exam.title }}
+                </h5>
+                <div class="assessment-meta">
+                    <span class="assessment-meta-item">
+                        <i class="bi bi-book"></i> {{ exam.subject.name }} ({{ exam.subject.code }})
+                    </span>
+                    <span class="assessment-meta-item">
+                        <i class="bi bi-people"></i> {{ exam.academic_class.name }}
+                    </span>
+                    <span class="assessment-meta-item">
+                        <i class="bi bi-calendar3"></i> {{ exam.term.get_name_display }}
+                    </span>
+                    <span class="assessment-meta-item">
+                        <i class="bi bi-award"></i> Max Score: {{ exam.max_score }}
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <strong>Date:</strong> {{ exam.date }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Questions:</strong> {{ questions.count }}
+                    </div>
+                </div>
+
+                {% if exam.instructions %}
+                <div class="alert alert-info">
+                    <strong>Instructions:</strong><br>
+                    {{ exam.instructions }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Questions Card -->
+        <div class="card">
+            <div class="card-header assessment-header" style="background: linear-gradient(135deg, #d63031 0%, #e17055 100%);">
+                <h5 class="mb-0">
+                    <i class="bi bi-question-circle me-2"></i>Questions
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if questions %}
+                <form method="post" id="examForm">
+                    {% csrf_token %}
+                    
+                    {% for q in questions %}
+                    <div class="question-block p-4 mb-3" style="border-radius: 0; border-left: 4px solid {% if q.question_type == 'true_false' %}#f9a825{% else %}#d63031{% endif %};">
+                        <div class="question-header">
+                            <h5 class="question-text">Q{{ forloop.counter }}. {{ q.text }}</h5>
+                            <div class="question-meta">
+                                <span class="question-type-badge {{ q.question_type }}">
+                                    {{ q.get_question_type_display }}
+                                </span>
+                                <span class="question-points">
+                                    {{ q.points }} point{{ q.points|pluralize }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="options-list px-2">
+                            {% for opt in q.shuffled_options %}
+                            <div class="form-check option-item">
+                                <input class="form-check-input option-radio" type="radio" name="question_{{ q.id }}" id="opt_{{ opt.id }}" value="{{ opt.id }}" required>
+                                <label class="form-check-label option-text" for="opt_{{ opt.id }}">{{ opt.text }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="card-footer-modern d-flex gap-2">
+                        <button type="button" class="btn btn-danger btn-lg flex-grow-1" data-bs-toggle="modal" data-bs-target="#submitModal">
+                            <i class="bi bi-send-check me-2"></i>Submit Exam
+                        </button>
+                        <a href="{% url 'students:my_results' %}" class="btn btn-outline-secondary btn-lg">Cancel</a>
+                    </div>
+                </form>
+                {% else %}
+                <div class="empty-state-modern">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <h4>No Questions Available</h4>
+                    <p>This exam has no questions yet. Please contact your teacher.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Submit Confirmation Modal -->
+<div class="modal fade" id="submitModal" tabindex="-1" aria-labelledby="submitModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title" id="submitModalLabel">
+                    <i class="bi bi-question-circle-fill text-danger me-2"></i>Confirm Submission
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <div class="d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #fdecea 0%, #fadbd8 100%);">
+                        <i class="bi bi-journal-check" style="font-size: 2rem; color: #d63031;"></i>
+                    </div>
+                </div>
+                <h5 class="text-center mb-2">Submit Exam?</h5>
+                <p class="text-muted text-center">You're about to submit <strong>{{ exam.title }}</strong>. Once submitted, you cannot change your answers.</p>
+                <div class="alert alert-warning mb-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Please ensure</strong> you have answered all questions before submitting.
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary flex-grow-1" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-danger flex-grow-1" id="confirmSubmitBtn">
+                    <i class="bi bi-send-check me-1"></i>Submit Exam
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('examForm')?.addEventListener('submit', function(e) {
+    // Check if all questions have been answered
+    const questions = document.querySelectorAll('.question-block');
+    let unanswered = 0;
+    
+    questions.forEach(q => {
+        const radios = q.querySelectorAll('input[type="radio"]');
+        const answered = Array.from(radios).some(r => r.checked);
+        if (!answered) {
+            q.classList.add('border-danger');
+            q.style.borderLeftColor = '#d63031';
+            unanswered++;
+        } else {
+            q.classList.remove('border-danger');
+            q.style.borderLeftColor = '';
+        }
+    });
+    
+    if (unanswered > 0) {
+        e.preventDefault();
+        alert(`Please answer all ${questions.length} questions. ${unanswered} unanswered.`);
+        return false;
+    }
+});
+
+document.getElementById('confirmSubmitBtn')?.addEventListener('click', function() {
+    const form = document.getElementById('examForm');
+    if (form) {
+        // Check all answered before submitting
+        const questions = document.querySelectorAll('.question-block');
+        let unanswered = 0;
+        questions.forEach(q => {
+            const radios = q.querySelectorAll('input[type="radio"]');
+            const answered = Array.from(radios).some(r => r.checked);
+            if (!answered) unanswered++;
+        });
+        
+        if (unanswered > 0) {
+            alert(`Please answer all ${questions.length} questions. ${unanswered} unanswered.`);
+            return;
+        }
+        
+        form.submit();
+    }
+});
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('examForm')?.addEventListener('submit', function(e) {
+    // Check if all questions have been answered
+    const questions = document.querySelectorAll('.question-block');
+    let unanswered = 0;
+    
+    questions.forEach(q => {
+        const radios = q.querySelectorAll('input[type="radio"]');
+        const answered = Array.from(radios).some(r => r.checked);
+        if (!answered) {
+            q.classList.add('border-danger');
+            unanswered++;
+        } else {
+            q.classList.remove('border-danger');
+        }
+    });
+    
+    if (unanswered > 0) {
+        e.preventDefault();
+        alert(`Please answer all ${questions.length} questions. ${unanswered} unanswered.`);
+        return false;
+    }
+});
+
+document.getElementById('confirmSubmitBtn')?.addEventListener('click', function() {
+    const form = document.getElementById('examForm');
+    if (form) {
+        // Check all answered before submitting
+        const questions = document.querySelectorAll('.question-block');
+        let unanswered = 0;
+        questions.forEach(q => {
+            const radios = q.querySelectorAll('input[type="radio"]');
+            const answered = Array.from(radios).some(r => r.checked);
+            if (!answered) unanswered++;
+        });
+        
+        if (unanswered > 0) {
+            alert(`Please answer all ${questions.length} questions. ${unanswered} unanswered.`);
+            return;
+        }
+        
+        form.submit();
+    }
+});
+</script>
+{% endblock %}

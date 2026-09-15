@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item active">Dashboard</li>
+        </ol>
+    </nav>
+    <h1>Welcome, {{ user.get_full_name|default:user.username }}</h1>
+    <p class="text-muted">Here's your academic overview</p>
+</div>
+
+{% if current_term %}
+<div class="alert alert-info d-flex align-items-center" role="alert">
+    <i class="bi bi-calendar-event-fill me-2"></i>
+    <div>
+        <strong>Current Term:</strong> {{ current_term.get_name_display }}
+        ({{ current_term.start_date }} - {{ current_term.end_date }})
+    </div>
+</div>
+{% endif %}
+
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-value">{{ class_subjects.count }}</div>
+            <div class="stat-label">My Subjects</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card accent">
+            <div class="stat-value">{{ recent_tests.count }}</div>
+            <div class="stat-label">Recent Tests</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card success">
+            <div class="stat-value">{{ recent_exams.count }}</div>
+            <div class="stat-label">Recent Exams</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-value">{% if academic_class %}{{ academic_class.name }}{% else %}N/A{% endif %}</div>
+            <div class="stat-label">My Class</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    {% if class_teacher %}
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-person-badge me-2"></i>Class Teacher
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-sm me-3" style="width: 56px; height: 56px; font-size: 1.5rem; background: var(--gradient-primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-person"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0">{% if class_teacher.teacher %}{{ class_teacher.teacher.get_full_name|default:class_teacher.teacher.username }}{% else %}Unassigned{% endif %}</h5>
+                        <p class="text-muted mb-0">{% if academic_class %}Class Teacher - {{ academic_class.name }}{% else %}No class assigned{% endif %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% if promotion %}
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-award me-2"></i>Latest Promotion Status
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        {% if promotion.is_promoted %}
+                            <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                        {% else %}
+                            <i class="bi bi-x-circle-fill text-danger" style="font-size: 3rem;"></i>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h5 class="mb-0">
+                            {% if promotion.is_promoted %}Promoted{% else %}Repeated{% endif %}
+                        </h5>
+                        <p class="text-muted mb-0">
+                            Avg: {{ promotion.average_score }}% | Next: {{ promotion.next_term_resumption_date }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-book-half me-2"></i>My Subjects ({% if current_term %}{{ current_term.get_name_display }}{% else %}Current{% endif %})</span>
+                <a href="{% url 'students:student_subjects' %}" class="btn btn-sm btn-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if class_subjects %}
+                    {% for cs in class_subjects %}
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <div>
+                            <strong>{{ cs.subject.name }}</strong>
+                            <span class="text-muted ms-2">{{ cs.subject.code }}</span>
+                        </div>
+                        <span class="badge bg-primary">{% if cs.teacher %}Taught by {{ cs.teacher.get_full_name|default:cs.teacher.username }}{% else %}No teacher{% endif %}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <h4>No subjects assigned</h4>
+                        <p class="text-muted">Contact your class teacher or admin.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-bar-chart-line me-2"></i>Recent Test Results</span>
+                <a href="{% url 'students:my_results' %}" class="btn btn-sm btn-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_tests %}
+                    {% for tr in recent_tests %}
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <div>
+                            <strong>{{ tr.test.title }}</strong>
+                            <div class="text-muted small">{{ tr.test.subject.name }}</div>
+                        </div>
+                        <span class="badge {% if tr.get_percentage >= 70 %}bg-success{% elif tr.get_percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}">
+                            {{ tr.score }}/{{ tr.test.max_score }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <h4>No test results yet</h4>
+                        <p class="text-muted">Take tests to see your results here.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

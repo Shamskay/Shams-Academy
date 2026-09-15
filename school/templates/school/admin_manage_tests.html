@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Tests{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'school:admin_dashboard' %}">Admin Dashboard</a></li>
+            <li class="breadcrumb-item active">Manage Tests</li>
+        </ol>
+    </nav>
+    <h1>Manage Tests</h1>
+    <p class="text-muted">View all tests in the system</p>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control" value="{{ search }}" placeholder="Search by title, subject, term, class...">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Term</label>
+                <select name="term" class="form-select">
+                    <option value="">All Terms</option>
+                    {% for t in terms %}
+                    <option value="{{ t.pk }}" {% if selected_term == t.pk|stringformat:"s" %}selected{% endif %}>{{ t.get_name_display }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Class</label>
+                <select name="class" class="form-select">
+                    <option value="">All Classes</option>
+                    {% for c in classes %}
+                    <option value="{{ c.pk }}" {% if selected_class == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Filter</button>
+                <a href="{% url 'assessments:admin_manage_tests' %}" class="btn btn-outline-secondary">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if page_obj %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Subject</th>
+                        <th>Term</th>
+                        <th>Class</th>
+                        <th>Max Score</th>
+                        <th>Date</th>
+                        <th>Questions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for test in page_obj %}
+                    <tr>
+                        <td>{{ test.title }}</td>
+                        <td>{{ test.subject.name }} ({{ test.subject.code }})</td>
+                        <td>{{ test.term.get_name_display }}</td>
+                        <td>{{ test.academic_class.name }}</td>
+                        <td>{{ test.max_score }}</td>
+                        <td>{{ test.date }}</td>
+                        <td>
+                            <a href="{% url 'assessments:admin_view_test_questions' test.pk %}" class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-eye"></i> View Questions
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">No tests found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% include 'pagination.html' %}
+        {% else %}
+        <div class="text-center text-muted py-4">No tests found.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

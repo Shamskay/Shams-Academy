@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Class Results{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'staff:staff_dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item active">{{ academic_class.name }} Results</li>
+        </ol>
+    </nav>
+    <h1>{{ academic_class.name }} - Student Results</h1>
+    <p class="text-muted">Click a student's name to view their individual results</p>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Student</th>
+                        <th>Matric</th>
+                        <th>Subject</th>
+                        <th>Test Score</th>
+                        <th>Exam Score</th>
+                        <th>Total</th>
+                        <th>Percentage</th>
+                        <th>Grade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in student_results %}
+                        {% if data.subjects %}
+                            {% for subject_data in data.subjects %}
+                                <tr>
+                                    {% if forloop.first %}
+                                        <td rowspan="{{ data.subjects|length }}" class="align-top fw-bold">
+                                            <a href="{% url 'students:staff_student_results' academic_class.pk data.student.pk %}" class="text-decoration-none text-primary">
+                                                {{ data.student.user.get_full_name|default:data.student.user.username }}
+                                            </a>
+                                        </td>
+                                        <td rowspan="{{ data.subjects|length }}" class="align-top">{{ data.student.admission_number }}</td>
+                                    {% endif %}
+                                    <td class="align-top">{{ subject_data.subject.code }} - {{ subject_data.subject.name }}</td>
+                                    <td class="align-top">
+                                        {% if subject_data.test_result %}
+                                            {{ subject_data.test_result.score }}/{{ subject_data.test_result.test.max_score }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="align-top">
+                                        {% if subject_data.exam_result %}
+                                            {{ subject_data.exam_result.score }}/{{ subject_data.exam_result.exam.max_score }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="align-top">
+                                        {% if subject_data.test_result and subject_data.exam_result %}
+                                            {{ subject_data.total_score }}/{{ subject_data.max_total }}
+                                        {% elif subject_data.test_result %}
+                                            {{ subject_data.test_result.score }}/{{ subject_data.test_result.test.max_score }}
+                                        {% elif subject_data.exam_result %}
+                                            {{ subject_data.exam_result.score }}/{{ subject_data.exam_result.exam.max_score }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="align-top">
+                                        {% if subject_data.percentage > 0 %}
+                                            {{ subject_data.percentage|floatformat:2 }}%
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="align-top">
+                                        {% if subject_data.grade %}
+                                            <span class="badge bg-info">{{ subject_data.grade.name }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'students:staff_student_results' academic_class.pk data.student.pk %}" class="text-decoration-none text-primary">
+                                        {{ data.student.user.get_full_name|default:data.student.user.username }}
+                                    </a>
+                                </td>
+                                <td>{{ data.student.admission_number }}</td>
+                                <td colspan="6" class="text-center text-muted">No results yet</td>
+                            </tr>
+                        {% endif %}
+                    {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center">
+                                <div class="empty-state">
+                                    <i class="bi bi-inbox"></i>
+                                    <h4>No students in this class</h4>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

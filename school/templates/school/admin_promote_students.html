@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Promote Students{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'school:admin_dashboard' %}">Admin Dashboard</a></li>
+            <li class="breadcrumb-item active">Promote Students</li>
+        </ol>
+    </nav>
+    <h1>Promote Students</h1>
+    <p class="text-muted">Process student promotions based on term results</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body p-4">
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Pass Mark <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" min="0" max="100" name="pass_mark" class="form-control" required value="50">
+                            <div class="form-text">Minimum average score required for promotion (percentage)</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Next Term Resumption Date <span class="text-danger">*</span></label>
+                            <input type="date" name="next_term_resumption_date" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">Process Promotions</button>
+                        <a href="{% url 'school:admin_dashboard' %}" class="btn btn-outline-secondary ms-2">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

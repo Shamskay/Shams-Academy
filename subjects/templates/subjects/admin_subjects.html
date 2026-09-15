@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Subjects{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'school:admin_dashboard' %}">Admin</a></li>
+            <li class="breadcrumb-item active">Subjects</li>
+        </ol>
+    </nav>
+    <h1>Manage Subjects</h1>
+    <p class="text-muted">Create and manage subjects</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-plus-circle me-2"></i>{% if editing_subject %}Edit Subject{% else %}Add New Subject{% endif %}
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Subject Name</label>
+                        {{ form.name }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Subject Code</label>
+                        {{ form.code }}
+                        <div class="form-text">e.g. MTH, ENG, PHY</div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        {{ form.is_core }}
+                        <label class="form-check-label">Core Subject</label>
+                    </div>
+                    <div class="mb-3 form-check">
+                        {{ form.is_active }}
+                        <label class="form-check-label">Active</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">{% if editing_subject %}Update Subject{% else %}Save Subject{% endif %}</button>
+                    {% if editing_subject %}
+                        <a href="{% url 'subjects:admin_subjects' %}" class="btn btn-secondary w-100 mt-2">Cancel</a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-list me-2"></i>All Subjects
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for subject in subjects %}
+                            <tr>
+                                <td><span class="badge bg-primary">{{ subject.code }}</span></td>
+                                <td>{{ subject.name }}</td>
+                                <td>
+                                    {% if subject.is_core %}
+                                        <span class="badge bg-success">Core</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Elective</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if subject.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#editModal{{ subject.pk }}">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{% url 'subjects:admin_delete_subject' subject.pk %}" data-delete-name="subject {{ subject.name }}">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% for subject in subjects %}
+<div class="modal fade" id="editModal{{ subject.pk }}" tabindex="-1" aria-labelledby="editModalLabel{{ subject.pk }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel{{ subject.pk }}">Edit Subject</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'subjects:admin_edit_subject' subject.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Subject Name</label>
+                        <input type="text" class="form-control" name="name" value="{{ subject.name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Subject Code</label>
+                        <input type="text" class="form-control" name="code" value="{{ subject.code }}" required>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" name="is_core" id="is_core{{ subject.pk }}" {% if subject.is_core %}checked{% endif %}>
+                        <label class="form-check-label" for="is_core{{ subject.pk }}">Core Subject</label>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" name="is_active" id="is_active{{ subject.pk }}" {% if subject.is_active %}checked{% endif %}>
+                        <label class="form-check-label" for="is_active{{ subject.pk }}">Active</label>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}

@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Students{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'school:admin_dashboard' %}">Admin</a></li>
+            <li class="breadcrumb-item active">Students</li>
+        </ol>
+    </nav>
+    <h1>Manage Students</h1>
+    <p class="text-muted">All registered students organized by class</p>
+    <form method="get" class="row g-3 mt-2">
+        <div class="col-md-4">
+            <input type="text" name="q" class="form-control" placeholder="Search students..." value="{{ search|default:'' }}">
+        </div>
+        <div class="col-md-3">
+            <select name="status" class="form-select">
+                <option value="">All Statuses</option>
+                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                <option value="graduated" {% if status_filter == 'graduated' %}selected{% endif %}>Graduated</option>
+                <option value="withdrawn" {% if status_filter == 'withdrawn' %}selected{% endif %}>Withdrawn</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="class_id" class="form-select">
+                <option value="">All Classes</option>
+                {% for cls in classes %}
+                <option value="{{ cls.pk }}" {% if class_filter == cls.pk|stringformat:"s" %}selected{% endif %}>{{ cls.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Filter</button>
+        </div>
+    </form>
+    <div class="mt-3">
+        <a href="{% url 'school:admin_all_results' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-bar-chart-line me-2"></i>View All Results
+        </a>
+        {% if search or status_filter or class_filter %}
+        <a href="{% url 'students:admin_students' %}" class="btn btn-outline-secondary ms-2">Clear Filters</a>
+        {% endif %}
+    </div>
+</div>
+
+{% if unassigned_students %}
+<div class="card mb-4">
+    <div class="card-header bg-warning text-dark">
+        <i class="bi bi-exclamation-triangle me-2"></i>Unassigned Students
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Matric Number</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Change Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in unassigned_students %}
+                    <tr>
+                        <td>{{ student.user.get_full_name|default:"-" }}</td>
+                        <td><span class="badge bg-primary">{{ student.admission_number }}</span></td>
+                        <td>{{ student.phone|default:"-" }}</td>
+                        <td>
+                            <span class="badge {% if student.status == 'active' %}bg-success{% elif student.status == 'graduated' %}bg-info{% elif student.status == 'withdrawn' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                {{ student.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <form method="post" class="d-flex gap-2 align-items-center">
+                                {% csrf_token %}
+                                <input type="hidden" name="profile_id" value="{{ student.pk }}">
+                                <select name="status" class="form-select form-select-sm" style="width: auto;">
+                                    <option value="active" {% if student.status == 'active' %}selected{% endif %}>Active</option>
+                                    <option value="graduated" {% if student.status == 'graduated' %}selected{% endif %}>Graduated</option>
+                                    <option value="withdrawn" {% if student.status == 'withdrawn' %}selected{% endif %}>Withdrawn</option>
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                            </form>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'students:admin_student_results' student.pk %}" class="btn btn-sm btn-info" title="View Results">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'students:admin_print_student_results' student.pk %}" class="btn btn-sm btn-primary" target="_blank" title="Print Results">
+                                    <i class="bi bi-printer"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{% url 'students:admin_delete_student' student.pk %}" data-delete-name="student {{ student.user.get_full_name|default:student.user.username }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% for cls, students, teacher in class_student_list %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>
+            <i class="bi bi-building me-2"></i>{{ cls.name }}
+        </span>
+        {% if teacher %}
+            <span class="badge bg-info">
+                <i class="bi bi-person-badge me-1"></i>Class Teacher: {{ teacher.get_full_name|default:teacher.username }}
+            </span>
+        {% else %}
+            <span class="badge bg-secondary">No Class Teacher Assigned</span>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Matric Number</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Change Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ student.user.get_full_name|default:"-" }}</td>
+                        <td><span class="badge bg-primary">{{ student.admission_number }}</span></td>
+                        <td>{{ student.phone|default:"-" }}</td>
+                        <td>
+                            <span class="badge {% if student.status == 'active' %}bg-success{% elif student.status == 'graduated' %}bg-info{% elif student.status == 'withdrawn' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                {{ student.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <form method="post" class="d-flex gap-2 align-items-center">
+                                {% csrf_token %}
+                                <input type="hidden" name="profile_id" value="{{ student.pk }}">
+                                <select name="status" class="form-select form-select-sm" style="width: auto;">
+                                    <option value="active" {% if student.status == 'active' %}selected{% endif %}>Active</option>
+                                    <option value="graduated" {% if student.status == 'graduated' %}selected{% endif %}>Graduated</option>
+                                    <option value="withdrawn" {% if student.status == 'withdrawn' %}selected{% endif %}>Withdrawn</option>
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                            </form>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'students:admin_student_results' student.pk %}" class="btn btn-sm btn-info" title="View Results">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'students:admin_print_student_results' student.pk %}" class="btn btn-sm btn-primary" target="_blank" title="Print Results">
+                                    <i class="bi bi-printer"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{% url 'students:admin_delete_student' student.pk %}" data-delete-name="student {{ student.user.get_full_name|default:student.user.username }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% include 'pagination.html' %}
+{% endblock %}

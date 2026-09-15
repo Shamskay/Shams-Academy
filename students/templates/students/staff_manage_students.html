@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Students{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'staff:staff_dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item active">My Students</li>
+        </ol>
+    </nav>
+    <h1>My Students</h1>
+    <p class="text-muted">Students in your assigned classes</p>
+</div>
+
+
+{% if unassigned_students %}
+<div class="card mb-4">
+    <div class="card-header bg-warning text-dark">
+        <i class="bi bi-exclamation-triangle me-2"></i>Unassigned Students
+    </div>
+    <div class="card-body">
+        <p class="text-muted mb-3">These students have not been assigned to any class yet.</p>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                        <tr>
+                            <th>Full Name</th>
+                            <th>Matric Number</th>
+                            <th>Email</th>
+                        </tr>
+                </thead>
+                <tbody>
+                    {% for student in unassigned_students %}
+                    <tr>
+                        <td>{{ student.user.get_full_name|default:"-" }}</td>
+                        <td><span class="badge bg-primary">{{ student.admission_number|default:"N/A" }}</span></td>
+                        <td>{{ student.user.email|default:"N/A" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                        <tr>
+                            <th>Full Name</th>
+                            <th>Matric Number</th>
+                            <th>Class</th>
+                            <th>Results</th>
+                        </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ student.user.get_full_name|default:"-" }}</td>
+                        <td><span class="badge bg-primary">{{ student.admission_number }}</span></td>
+                        <td>{{ student.academic_class.name|default:"Not assigned" }}</td>
+<td>
+                             <a href="{% url 'students:staff_student_results' student.academic_class.pk student.pk %}" class="btn btn-sm btn-outline-primary">
+                                 <i class="bi bi-eye"></i> View Results
+                             </a>
+                         </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

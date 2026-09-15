@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Question - {{ assessment.title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'staff:staff_dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'assessments:staff_manage_tests' %}">Manage Tests</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'assessments:staff_manage_test_questions' assessment.pk %}">Questions</a></li>
+            <li class="breadcrumb-item active">Add Question</li>
+        </ol>
+    </nav>
+    <h1>Add Question</h1>
+    <p class="text-muted">{{ assessment.title }}</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body p-4">
+                <form method="post" id="questionForm">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Question Type</label>
+                        <select name="question_type" class="form-select" id="questionType">
+                            <option value="mcq">Multiple Choice</option>
+                            <option value="true_false">True/False</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Question Text</label>
+                        <textarea name="question_text" class="form-control" rows="3" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Points</label>
+                        <input type="number" name="points" class="form-control" value="1" min="1" max="100" required>
+                    </div>
+                    
+                    <hr>
+                    <h5>Options</h5>
+                    <p class="text-muted small" id="optionsHint">Add at least 2 options. Select the one correct answer.</p>
+                    
+                    <div id="optionsContainer">
+                        {% for i in "1234" %}
+                        <div class="option-row row g-2 mb-2">
+                            <div class="col-md-6">
+                                <input type="text" name="option_text" class="form-control" placeholder="Option text" required>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="radio" name="option_correct" value="{{ forloop.counter0 }}">
+                                    <label class="form-check-label ms-1">Correct</label>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="number" name="option_order" class="form-control" value="{{ forloop.counter0 }}" min="0" placeholder="Order">
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-outline-danger remove-option" onclick="removeOption(this)" title="Remove">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="addOptionBtn">
+                        <i class="bi bi-plus-circle me-1"></i>Add Option
+                    </button>
+                    
+                    <hr>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">Save Question</button>
+                        <a href="{% url 'assessments:staff_manage_test_questions' assessment.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let optionCounter = 4;
+const questionTypeSelect = document.getElementById('questionType');
+const optionsContainer = document.getElementById('optionsContainer');
+const addOptionBtn = document.getElementById('addOptionBtn');
+const optionsHint = document.getElementById('optionsHint');
+
+function updateOptionsForType(type) {
+    if (type === 'true_false') {
+        // Set exactly 2 options: True and False
+        optionsContainer.innerHTML = `
+            <div class="option-row row g-2 mb-2">
+                <div class="col-md-6">
+                    <input type="text" name="option_text" class="form-control" value="True" required readonly>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="radio" name="option_correct" value="0" required>
+                        <label class="form-check-label ms-1">Correct</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <input type="number" name="option_order" class="form-control" value="0" min="0" readonly>
+                </div>
+                <div class="col-md-1">
+                    <button type="button" class="btn btn-outline-danger remove-option" disabled title="Cannot remove">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="option-row row g-2 mb-2">
+                <div class="col-md-6">
+                    <input type="text" name="option_text" class="form-control" value="False" required readonly>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="radio" name="option_correct" value="1">
+                        <label class="form-check-label ms-1">Correct</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <input type="number" name="option_order" class="form-control" value="1" min="0" readonly>
+                </div>
+                <div class="col-md-1">
+                    <button type="button" class="btn btn-outline-danger remove-option" disabled title="Cannot remove">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        addOptionBtn.style.display = 'none';
+        optionsHint.textContent = 'True/False questions have exactly two options: True and False.';
+    } else {
+        // Multiple Choice - restore default 4 options
+        optionsContainer.innerHTML = `
+            {% for i in "1234" %}
+            <div class="option-row row g-2 mb-2">
+                <div class="col-md-6">
+                    <input type="text" name="option_text" class="form-control" placeholder="Option text" required>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="radio" name="option_correct" value="{{ forloop.counter0 }}">
+                        <label class="form-check-label ms-1">Correct</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <input type="number" name="option_order" class="form-control" value="{{ forloop.counter0 }}" min="0" placeholder="Order">
+                </div>
+                <div class="col-md-1">
+                    <button type="button" class="btn btn-outline-danger remove-option" onclick="removeOption(this)" title="Remove">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        `;
+        addOptionBtn.style.display = 'inline-block';
+        optionsHint.textContent = 'Add at least 2 options. Select the one correct answer.';
+        optionCounter = 4;
+        // Re-attach remove event listeners
+        document.querySelectorAll('.remove-option').forEach(btn => {
+            btn.addEventListener('click', function() {
+                removeOption(this);
+            });
+        });
+    }
+}
+
+// Event listener for question type change
+questionTypeSelect.addEventListener('change', function() {
+    updateOptionsForType(this.value);
+});
+
+document.getElementById('addOptionBtn').addEventListener('click', function() {
+    const container = document.getElementById('optionsContainer');
+    const div = document.createElement('div');
+    div.className = 'option-row row g-2 mb-2';
+    div.innerHTML = `
+        <div class="col-md-6">
+            <input type="text" name="option_text" class="form-control" placeholder="Option text" required>
+        </div>
+        <div class="col-md-3">
+            <div class="form-check mt-2">
+                <input class="form-check-input" type="radio" name="option_correct" value="${optionCounter}">
+                <label class="form-check-label ms-1">Correct</label>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <input type="number" name="option_order" class="form-control" value="${optionCounter}" min="0" placeholder="Order">
+        </div>
+        <div class="col-md-1">
+            <button type="button" class="btn btn-outline-danger remove-option" onclick="removeOption(this)" title="Remove">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    `;
+    container.appendChild(div);
+    optionCounter++;
+});
+
+function removeOption(btn) {
+    const rows = document.querySelectorAll('.option-row');
+    if (rows.length <= 2) {
+        alert('At least 2 options are required.');
+        return;
+    }
+    btn.closest('.option-row').remove();
+}
+
+// Initialize remove buttons
+document.querySelectorAll('.remove-option').forEach(btn => {
+    btn.addEventListener('click', function() {
+        removeOption(this);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Audit Logs{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'school:admin_dashboard' %}">Admin</a></li>
+            <li class="breadcrumb-item active">Audit Logs</li>
+        </ol>
+    </nav>
+    <h1>Audit Logs</h1>
+    <p class="text-muted">Track all system changes and user actions</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-list me-2"></i>Recent Activity
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Model</th>
+                        <th>Object</th>
+                        <th>Changes</th>
+                        <th>IP Address</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log.user.get_full_name|default:log.user.username|default:"System" }}</td>
+                        <td>
+                            {% if log.action == 'create' %}
+                                <span class="badge bg-success">Created</span>
+                            {% elif log.action == 'update' %}
+                                <span class="badge bg-warning">Updated</span>
+                            {% elif log.action == 'delete' %}
+                                <span class="badge bg-danger">Deleted</span>
+                            {% elif log.action == 'login' %}
+                                <span class="badge bg-info">Login</span>
+                            {% elif log.action == 'logout' %}
+                                <span class="badge bg-secondary">Logout</span>
+                            {% elif log.action == 'export' %}
+                                <span class="badge bg-primary">Export</span>
+                            {% elif log.action == 'import' %}
+                                <span class="badge bg-info">Import</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ log.get_action_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ log.model_name }}</td>
+                        <td>{{ log.object_repr|truncatechars:50 }}</td>
+                        <td>
+                            {% if log.changes %}
+                                <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#changes{{ log.id }}">
+                                    View
+                                </button>
+                                <div class="collapse mt-2" id="changes{{ log.id }}">
+                                    <pre class="bg-light p-2 rounded small">{{ log.changes|pprint }}</pre>
+                                </div>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ log.ip_address|default:"-" }}</td>
+                        <td>{{ log.timestamp|date:"M d, Y H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">No audit logs yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

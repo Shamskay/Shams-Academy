@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block title %}Staff Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item active">Dashboard</li>
+        </ol>
+    </nav>
+    <h1>Welcome, {{ user.get_full_name|default:user.username }}</h1>
+    <p class="text-muted">Staff Dashboard</p>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-value">{{ teaching_assignments.count }}</div>
+            <div class="stat-label">Teaching Assignments</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card accent">
+            <div class="stat-value">{{ materials.count }}</div>
+            <div class="stat-label">Materials Uploaded</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card success">
+            <div class="stat-value">{{ tests.count }}</div>
+            <div class="stat-label">Active Tests</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-value">{{ exams.count }}</div>
+            <div class="stat-label">Active Exams</div>
+        </div>
+    </div>
+</div>
+
+    <div class="row g-4">
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-book-half me-2"></i>My Teaching Assignments</span>
+            </div>
+            <div class="card-body">
+                {% if teaching_assignments %}
+                    {% for ta in teaching_assignments %}
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <div>
+                            <strong>{{ ta.subject.name }}</strong>
+                            <span class="text-muted ms-2">{{ ta.subject.code }}</span>
+                        </div>
+                        <span class="badge bg-primary">{{ ta.academic_class.name }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <h4>No assignments</h4>
+                        <p class="text-muted">Contact admin for class assignments.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-file-earmark-arrow-up me-2"></i>Recent Materials</span>
+                <div>
+                    <a href="{% url 'materials:staff_upload_material' %}" class="btn btn-sm btn-accent me-1">Upload</a>
+                    <a href="{% url 'materials:staff_manage_materials' %}" class="btn btn-sm btn-outline-primary">Manage</a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if materials %}
+                    {% for m in materials %}
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <div>
+                            <strong>{{ m.title }}</strong>
+                            <div class="text-muted small">{{ m.subject.name }} | {{ m.term.get_name_display }}</div>
+                        </div>
+                        {% if m.file %}
+                        <a href="{{ m.file.url }}" class="btn btn-sm btn-outline-primary" download>
+                            <i class="bi bi-download"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <h4>No materials uploaded</h4>
+                        <p class="text-muted">Upload study materials for your subjects.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clipboard-check me-2"></i>Recent Tests</span>
+                <div>
+                    <a href="{% url 'assessments:staff_create_test' %}" class="btn btn-sm btn-accent me-1">Create</a>
+                    <a href="{% url 'assessments:staff_enter_results_table' %}?type=test" class="btn btn-sm btn-success me-1">Enter Results</a>
+                    <a href="{% url 'assessments:staff_manage_tests' %}" class="btn btn-sm btn-outline-primary">Manage</a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if tests %}
+                    {% for t in tests %}
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <div>
+                            <strong>{{ t.title }}</strong>
+                            <div class="text-muted small">{{ t.subject.name }} - {{ t.academic_class.name }}</div>
+                        </div>
+                        <span class="badge bg-primary">{{ t.term.get_name_display }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <h4>No tests created</h4>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-journal-check me-2"></i>Recent Exams</span>
+                <div>
+                    <a href="{% url 'assessments:staff_create_exam' %}" class="btn btn-sm btn-accent me-1">Create</a>
+                    <a href="{% url 'assessments:staff_enter_results_table' %}?type=exam" class="btn btn-sm btn-success me-1">Enter Results</a>
+                    <a href="{% url 'assessments:staff_manage_exams' %}" class="btn btn-sm btn-outline-primary">Manage</a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if exams %}
+                    {% for e in exams %}
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <div>
+                            <strong>{{ e.title }}</strong>
+                            <div class="text-muted small">{{ e.subject.name }} - {{ e.academic_class.name }}</div>
+                        </div>
+                        <span class="badge bg-primary">{{ e.term.get_name_display }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <h4>No exams created</h4>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

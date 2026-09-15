@@ -1,0 +1,251 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Shamskay Academy{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container">
+        {% if user.is_authenticated %}
+            {% if user.is_superuser %}
+                {% url 'school:admin_dashboard' as dashboard_url %}
+            {% elif user.profile.role == 'staff' %}
+                {% url 'staff:staff_dashboard' as dashboard_url %}
+            {% else %}
+                {% url 'students:student_dashboard' as dashboard_url %}
+            {% endif %}
+        {% else %}
+            {% url 'school:home' as dashboard_url %}
+        {% endif %}
+        <a class="navbar-brand" href="{{ dashboard_url }}">
+            <i class="bi bi-mortarboard-fill me-2"></i>Shamskay Academy
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample"
+                aria-controls="navbarsExample" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarsExample">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link" href="{{ dashboard_url }}">Home</a></li>
+                {% if user.is_authenticated %}
+                    {% if user.is_superuser %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="adminManageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Manage</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'students:admin_students' %}">Students</a></li>
+                                <li><a class="dropdown-item" href="{% url 'staff:admin_staff' %}">Staff</a></li>
+                                <li><a class="dropdown-item" href="{% url 'subjects:admin_classes' %}">Classes</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'subjects:admin_subjects' %}">Subjects</a></li>
+                                <li><a class="dropdown-item" href="{% url 'subjects:admin_class_subjects' %}">Class Subjects</a></li>
+                                <li><a class="dropdown-item" href="{% url 'subjects:admin_class_teachers' %}">Class Teachers</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'materials:admin_manage_materials' %}">Materials</a></li>
+                                <li><a class="dropdown-item" href="{% url 'assessments:admin_manage_tests' %}">Tests</a></li>
+                                <li><a class="dropdown-item" href="{% url 'assessments:admin_manage_exams' %}">Exams</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="adminResultsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Results</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'assessments:admin_calculate_term_results' %}">Calculate Term Results</a></li>
+                                <li><a class="dropdown-item" href="{% url 'assessments:admin_promote_students' %}">Promote Students</a></li>
+                                <li><a class="dropdown-item" href="{% url 'school:admin_all_results' %}">View All Results</a></li>
+                                <li><a class="dropdown-item" href="{% url 'school:admin_result_remarks' %}">Result Remarks</a></li>
+                                <li><a class="dropdown-item" href="{% url 'school:admin_generate_report_cards' %}">Generate Report Cards</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'subjects:admin_terms' %}">Terms</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="adminAcademicDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Academic</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'school:admin_grade_boundaries' %}">Grade Boundaries</a></li>
+                                <li><a class="dropdown-item" href="{% url 'school:admin_events' %}">Events</a></li>
+                                <li><a class="dropdown-item" href="{% url 'school:admin_parent_profiles' %}">Parent Profiles</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="adminFinanceDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Finance</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'school:admin_fees' %}">Fees</a></li>
+                                <li><a class="dropdown-item" href="{% url 'school:admin_payments' %}">Payments</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'school:admin_audit_logs' %}">Audit Logs</a></li>
+                    {% elif user.profile.role == 'staff' %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="staffTeachingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Teaching</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'materials:staff_upload_material' %}">Upload Material</a></li>
+                                <li><a class="dropdown-item" href="{% url 'materials:staff_manage_materials' %}">Manage Materials</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'assessments:staff_create_test' %}">Create Test</a></li>
+                                <li><a class="dropdown-item" href="{% url 'assessments:staff_manage_tests' %}">Manage Tests</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'assessments:staff_create_exam' %}">Create Exam</a></li>
+                                <li><a class="dropdown-item" href="{% url 'assessments:staff_manage_exams' %}">Manage Exams</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'assessments:staff_enter_test_result' %}">Enter Test Result</a></li>
+                                <li><a class="dropdown-item" href="{% url 'assessments:staff_enter_exam_result' %}">Enter Exam Result</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'students:staff_subject_students' %}">Subject Students</a></li>
+                            </ul>
+                        </li>
+                        {% if user.profile.is_class_teacher %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="staffStudentsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Students</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'students:staff_manage_students' %}">My Students</a></li>
+                            </ul>
+                        </li>
+                        {% endif %}
+                    {% elif user.profile.role == 'student' %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'students:student_subjects' %}">My Subjects</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'students:my_results' %}">Results</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'students:term_results' %}">Term Results</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'school:report_card' %}">Report Card</a></li>
+                    {% elif user.profile.role == 'parent' %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'school:parent_dashboard' %}">My Children</a></li>
+                    {% endif %}
+                {% endif %}
+            </ul>
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown"
+                           role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {% if user.profile.avatar %}
+                                <img src="{{ user.profile.avatar.url }}" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                            {% else %}
+                                <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
+                            {% endif %}
+                            <span>{{ user.first_name|default:user.username }}</span>
+                            {% if user.is_superuser %}
+                                <span class="badge bg-danger ms-1">admin</span>
+                            {% elif user.profile.role == 'student' and user.profile.admission_number %}
+                                <span class="badge bg-primary ms-1">{{ user.profile.admission_number }}</span>
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">Profile</a></li>
+                            {% if user.profile.role == 'student' %}
+                                <li><a class="dropdown-item" href="{% url 'students:my_results' %}">My Results</a></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="{% url 'accounts:password_change' %}">Change Password</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="post" action="{% url 'accounts:logout' %}">
+                                    {% csrf_token %}
+                                    <button class="dropdown-item">Logout</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'school:login' %}">Login</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+    {% block page_content %}
+    <div class="container py-4">
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show alert-message" role="alert" data-auto-dismiss="5000">
+            <div class="d-flex align-items-center">
+                {% if message.tags == 'success' %}
+                    <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                {% elif message.tags == 'error' %}
+                    <i class="bi bi-exclamation-circle-fill me-2 fs-5"></i>
+                {% elif message.tags == 'warning' %}
+                    <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                {% elif message.tags == 'info' %}
+                    <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                {% endif %}
+                <div>{{ message }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+    </div>
+    {% endblock %}
+
+<footer class="bg-dark text-white py-4 mt-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <h5 class="mb-3"><i class="bi bi-mortarboard-fill me-2"></i>Shamskay Academy</h5>
+                <p class="text-white-50 mb-0">Excellence in Education. Building tomorrow's leaders today.</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <p class="text-white-50 mb-0">&copy; {% now "Y" %} Shamskay Academy. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this item? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteModalForm" method="post" action="">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var deleteModal = document.getElementById('deleteModal');
+    if (deleteModal) {
+        deleteModal.addEventListener('show.bs.modal', function(event) {
+            var button = event.relatedTarget;
+            var url = button.getAttribute('data-delete-url');
+            var name = button.getAttribute('data-delete-name') || 'this item';
+            var form = document.getElementById('deleteModalForm');
+            form.action = url;
+            deleteModal.querySelector('.modal-body p').textContent = 'Are you sure you want to delete ' + name + '? This action cannot be undone.';
+        });
+    }
+
+    // Auto-dismiss alerts after 5 seconds
+    var alerts = document.querySelectorAll('.alert-message[data-auto-dismiss]');
+    alerts.forEach(function(alert) {
+        var delay = parseInt(alert.getAttribute('data-auto-dismiss'), 10) || 5000;
+        setTimeout(function() {
+            var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+            bsAlert.close();
+        }, delay);
+    });
+});
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

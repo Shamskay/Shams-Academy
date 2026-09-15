@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}View {{ assessment_type|title }} Questions - {{ assessment.title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'school:admin_dashboard' %}">Admin Panel</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'assessments:admin_manage_tests' %}">Manage {{ assessment_type|title }}s</a></li>
+            <li class="breadcrumb-item active">Questions</li>
+        </ol>
+    </nav>
+    <h1>{{ assessment_type|title }} Questions</h1>
+    <p class="text-muted">{{ assessment.title }} - {{ assessment.subject.name }} ({{ assessment.subject.code }}) | {{ assessment.academic_class.name }} | {{ assessment.term.get_name_display }}</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <!-- Assessment Header -->
+            <div class="assessment-header">
+                <h5>
+                    <i class="bi bi-{% if assessment_type == 'test' %}clipboard-check{% else %}journal-check{% endif %}"></i>
+                    Questions & Answers
+                </h5>
+                <div class="assessment-meta">
+                    <span class="assessment-meta-item">
+                        <i class="bi bi-book"></i> {{ assessment.subject.name }} ({{ assessment.subject.code }})
+                    </span>
+                    <span class="assessment-meta-item">
+                        <i class="bi bi-people"></i> {{ assessment.academic_class.name }}
+                    </span>
+                    <span class="assessment-meta-item">
+                        <i class="bi bi-calendar3"></i> {{ assessment.term.get_name_display }}
+                    </span>
+                    <span class="assessment-meta-item">
+                        <i class="bi bi-award"></i> Max Score: {{ assessment.max_score }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="stat-value">{{ questions.count }}</div>
+                    <div class="stat-label">Total Questions</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">
+                        {% with total_points=0 %}
+                            {% for q in questions %}{% with total_points=total_points|add:q.points %}{% endwith %}{% endfor %}{{ total_points }}
+                        {% endwith %}
+                    </div>
+                    <div class="stat-label">Total Points</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">
+                        {% with mcq_count=0 true_false_count=0 %}
+                            {% for q in questions %}
+                                {% if q.question_type == 'mcq' %}{% with mcq_count=mcq_count|add:1 %}{% endwith %}{% else %}{% with true_false_count=true_false_count|add:1 %}{% endwith %}{% endif %}
+                            {% endfor %}
+                            {{ mcq_count }}
+                        {% endwith %}
+                    </div>
+                    <div class="stat-label">Multiple Choice</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">
+                        {% with mcq_count=0 true_false_count=0 %}
+                            {% for q in questions %}
+                                {% if q.question_type == 'mcq' %}{% with mcq_count=mcq_count|add:1 %}{% endwith %}{% else %}{% with true_false_count=true_false_count|add:1 %}{% endwith %}{% endif %}
+                            {% endfor %}
+                            {{ true_false_count }}
+                        {% endwith %}
+                    </div>
+                    <div class="stat-label">True/False</div>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                {% if questions %}
+                    {% for q in questions %}
+                    <div class="question-block p-4 mb-3" style="border-radius: 0; border-left: 4px solid {% if q.question_type == 'true_false' %}#f9a825{% else %}#1a237e{% endif %};">
+                        <!-- Question Header -->
+                        <div class="question-header">
+                            <h5 class="question-text">Q{{ forloop.counter }}. {{ q.text }}</h5>
+                            <div class="question-meta">
+                                <span class="question-type-badge {{ q.question_type }}">
+                                    {{ q.get_question_type_display }}
+                                </span>
+                                <span class="question-points">
+                                    {{ q.points }} point{{ q.points|pluralize }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Options -->
+                        <div class="options-list px-2">
+                            {% for opt in q.options.all %}
+                            <div class="option-item {% if opt.is_correct %}correct{% endif %}">
+                                <div class="option-radio"></div>
+                                <span class="option-text">{{ opt.text }}</span>
+                                <span class="option-order">#{{ forloop.counter }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="empty-state-modern">
+                    <i class="bi bi-question-circle"></i>
+                    <h4>No Questions Yet</h4>
+                    <p>This {{ assessment_type }} doesn't have any questions. Teachers can add questions from the management panel.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="card-footer-modern d-flex justify-content-between align-items-center">
+                <span class="question-count">
+                    Showing <strong>{{ questions.count }}</strong> question{{ questions.count|pluralize }} for this {{ assessment_type }}
+                </span>
+                <a href="{% url 'assessments:admin_manage_tests' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Back to {{ assessment_type|title }}s
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

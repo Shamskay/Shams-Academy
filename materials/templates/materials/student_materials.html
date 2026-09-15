@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ subject.name }} Materials{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'students:student_subjects' %}">My Subjects</a></li>
+            <li class="breadcrumb-item active">{{ subject.name }} Materials</li>
+        </ol>
+    </nav>
+    <h1>{{ subject.name }} ({{ subject.code }})</h1>
+    <p class="text-muted">
+        {% if current_term %}
+            Study materials for {{ current_term.get_name_display }}
+        {% else %}
+            No active term
+        {% endif %}
+    </p>
+</div>
+
+{% if materials %}
+    <div class="row g-3">
+        {% for material in materials %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ material.title }}</h5>
+                    <p class="text-muted small mb-1">
+                        Uploaded by {{ material.uploaded_by.get_full_name|default:material.uploaded_by.username }}
+                        on {{ material.created_at|date:"M d, Y" }}
+                    </p>
+                    <p class="text-muted small mb-2">
+                        Term: {{ material.term.get_name_display|default:"N/A" }}
+                    </p>
+                    {% if material.description %}
+                        <p class="small text-muted">{{ material.description|truncatechars:120 }}</p>
+                    {% endif %}
+                    {% if material.file %}
+                        <a href="{{ material.file.url }}" class="btn btn-sm btn-primary" download>
+                            <i class="bi bi-download"></i> Download
+                        </a>
+                    {% endif %}
+                    {% if material.external_url %}
+                        <a href="{{ material.external_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-link-45deg"></i> Open Link
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
+            <h4>No materials yet</h4>
+            <p class="text-muted">Check back later for study materials from your teachers.</p>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

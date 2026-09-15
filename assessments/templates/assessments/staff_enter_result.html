@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Enter {{ type }} Result{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'staff:staff_dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item active">Enter {{ type }} Result</li>
+        </ol>
+    </nav>
+    <h1>Enter {{ type }} Result</h1>
+    <p class="text-muted">Record student scores</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Class</label>
+                        {{ form.academic_class }}
+                        {% if form.academic_class.errors %}
+                            <div class="text-danger small">{{ form.academic_class.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Student</label>
+                        {{ form.student }}
+                        {% if form.student.help_text %}
+                            <small class="text-muted">{{ form.student.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ type }}</label>
+                        {{ form.test }}{{ form.exam }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Score</label>
+                        {{ form.score }}
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">Save Result</button>
+                        <a href="{% url 'staff:staff_dashboard' %}" class="btn btn-outline-secondary ms-2">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.getElementById('id_result_class')?.addEventListener('change', function() {
+    if (this.value) {
+        this.form.submit();
+    }
+});
+</script>
+{% endblock %}

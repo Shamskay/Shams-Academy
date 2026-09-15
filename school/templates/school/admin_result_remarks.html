@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Result Remarks{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'school:admin_dashboard' %}">Admin</a></li>
+            <li class="breadcrumb-item active">Result Remarks</li>
+        </ol>
+    </nav>
+    <h1>Result Remarks</h1>
+    <p class="text-muted">Manage teacher remarks for student results</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-plus-circle me-2"></i>Add Remark
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label">Student</label>
+                        {{ form.student }}
+                        {% if form.student.errors %}
+                            <div class="text-danger small">{{ form.student.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Term</label>
+                        {{ form.term }}
+                        {% if form.term.errors %}
+                            <div class="text-danger small">{{ form.term.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Class</label>
+                        {{ form.academic_class }}
+                        {% if form.academic_class.errors %}
+                            <div class="text-danger small">{{ form.academic_class.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Remark</label>
+                        {{ form.remark }}
+                        {% if form.remark.errors %}
+                            <div class="text-danger small">{{ form.remark.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Remark</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-list me-2"></i>Existing Remarks
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Term</th>
+                                <th>Class</th>
+                                <th>Remark</th>
+                                <th>By</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for remark in remarks %}
+                            <tr>
+                                <td>{{ remark.student.get_full_name|default:remark.student.username }}</td>
+                                <td>{{ remark.term.get_name_display }}</td>
+                                <td>{{ remark.academic_class.name }}</td>
+                                <td>{{ remark.remark|truncatechars:50 }}</td>
+                                <td>{{ remark.created_by.get_full_name|default:remark.created_by.username|default:"System" }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{% url 'school:admin_delete_result_remark' remark.pk %}" data-delete-name="remark">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">No remarks added yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

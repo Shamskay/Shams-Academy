@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block title %}Parent Profiles{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'school:admin_dashboard' %}">Admin</a></li>
+            <li class="breadcrumb-item active">Parent Profiles</li>
+        </ol>
+    </nav>
+    <h1>Parent Profiles</h1>
+    <p class="text-muted">Manage parent/guardian access to student information</p>
+</div>
+
+<!-- Stats Header Card -->
+<div class="card mb-5">
+    <div class="assessment-header">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <h5 class="mb-1"><i class="bi bi-people me-2"></i>Overview</h5>
+                <p class="mb-0 opacity-75">{{ parents.paginator.count }} parent{{ parents.paginator.count|pluralize }} registered</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{% url 'school:admin_create_parent' %}" class="btn btn-light btn-lg fw-semibold px-4">
+                    <i class="bi bi-plus-circle me-2"></i>Create Parent
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="stats-row">
+        <div class="stat-item">
+            <div class="stat-value danger">{{ parents.paginator.count }}</div>
+            <div class="stat-label">Total Parents</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value accent">
+                {% with total_children=0 %}
+                    {% for p in parents.object_list %}{% with total_children=total_children|add:p.links|length %}{% endwith %}{% endfor %}{{ total_children }}
+                {% endwith %}
+            </div>
+            <div class="stat-label">Linked Children</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value success">
+                {% with primary_count=0 %}
+                    {% for p in parents.object_list %}
+                        {% for link in p.links %}{% if link.is_primary %}{% with primary_count=primary_count|add:1 %}{% endwith %}{% endif %}{% endfor %}
+                    {% endfor %}{{ primary_count }}
+                {% endwith %}
+            </div>
+            <div class="stat-label">Primary Contacts</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">
+                {% with no_children=0 %}
+                    {% for p in parents.object_list %}{% if not p.links %}{% with no_children=no_children|add:1 %}{% endwith %}{% endif %}{% endfor %}{{ no_children }}
+                {% endwith %}
+            </div>
+            <div class="stat-label">No Children Yet</div>
+        </div>
+    </div>
+</div>
+
+<!-- Parents List -->
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h5 class="mb-0"><i class="bi bi-people me-2"></i>Existing Parents & Children</h5>
+                <span class="badge bg-primary">{{ parents.paginator.count }} parent{{ parents.paginator.count|pluralize }}</span>
+            </div>
+            <div class="card-body p-0">
+                {% if parents %}
+                    <div class="list-group list-group-flush">
+                        {% for parent_data in parents %}
+                        <div class="list-group-item parent-card" style="border: none; border-bottom: 1px solid #f0f0f0; padding: 1.5rem;">
+                            <!-- Parent Header -->
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; border-radius: 50%; font-size: 1.5rem;">
+                                        {% with name=parent_data.user.get_full_name|default:parent_data.user.username %}
+                                            {{ name|first|upper }}
+                                        {% endwith %}
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold">{{ parent_data.user.get_full_name|default:parent_data.user.username }}</h6>
+                                        <div class="d-flex align-items-center gap-2 text-muted small">
+                                            <span class="badge bg-primary"><i class="bi bi-key me-1"></i>{{ parent_data.user.profile.unique_id|default:"No code" }}</span>
+                                            <span class="badge bg-secondary">{{ parent_data.links|length }} child{{ parent_data.links|length|pluralize }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a href="{% url 'school:admin_add_child_to_parent' parent_data.user.pk %}" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-person-plus me-1"></i>Add Child
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Children Table -->
+                            {% if parent_data.links %}
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0 align-middle" style="font-size: 0.875rem;">
+                                    <thead>
+                                        <tr style="background: #f8f9ff;">
+                                            <th style="width: 30%;">Student</th>
+                                            <th>Relationship</th>
+                                            <th>Phone</th>
+                                            <th>Email</th>
+                                            <th class="text-center">Primary</th>
+                                            <th style="width: 60px;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for link in parent_data.links %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="avatar-circle bg-light text-primary d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 50%; font-size: 0.75rem; font-weight: 600;">
+                                                        {% with sname=link.student.get_full_name|default:link.student.username %}{{ sname|first|upper }}{% endwith %}
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-medium">{{ link.student.get_full_name|default:link.student.username }}</div>
+                                                        <div class="text-muted small">{{ link.student.profile.academic_class.name|default:"No class" }} · {{ link.student.profile.admission_number|default:"No admission" }}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+<td>
+                                                 <span class="badge bg-info text-white">{{ link.get_relationship_display }}</span>
+                                             </td>
+                                            <td class="text-muted">{{ link.phone|default:"—" }}</td>
+                                            <td class="text-muted">{{ link.email|default:"—" }}</td>
+                                            <td class="text-center">
+                                                {% if link.is_primary %}
+                                                <i class="bi bi-check-circle-fill text-success" style="font-size: 1.25rem;"></i>
+                                                {% else %}
+                                                <i class="bi bi-circle text-muted" style="font-size: 1.25rem;"></i>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{% url 'school:admin_delete_parent_profile' link.pk %}" data-delete-name="parent profile link" title="Remove link">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="empty-state-modern p-3" style="margin: 0 -1.5rem -1.5rem; border-radius: 0 0 1rem 1rem;">
+                                <i class="bi bi-person-plus"></i>
+                                <h6>No children linked yet</h6>
+                                <p class="small text-muted mb-0">Click "Add Child" to link a student</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                <div class="empty-state-modern p-5">
+                    <i class="bi bi-inbox"></i>
+                    <h4>No Parent Profiles Yet</h4>
+                    <p class="text-muted mb-4">Get started by creating your first parent account.</p>
+                    <a href="{% url 'school:admin_create_parent' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>Create First Parent
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if parents.has_other_pages %}
+        <div class="card-footer">
+            {% include 'pagination.html' %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

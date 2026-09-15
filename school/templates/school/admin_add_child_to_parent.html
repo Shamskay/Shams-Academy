@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Child to Parent{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'school:admin_dashboard' %}">Admin</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'school:admin_parent_profiles' %}">Parent Profiles</a></li>
+            <li class="breadcrumb-item active">Add Child</li>
+        </ol>
+    </nav>
+    <h1>Add Child to {{ parent.get_full_name|default:parent.username }}</h1>
+    <p class="text-muted">Link a student to this parent account</p>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-funnel me-2"></i>Step 1: Select Class
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-8">
+                        <label class="form-label">Select Class</label>
+                        <select name="class_id" class="form-select">
+                            <option value="">All Classes</option>
+                            {% for cls in classes %}
+                                <option value="{{ cls.pk }}" {% if selected_class_id|default:'' == cls.pk|stringformat:"s" %}selected{% endif %}>{{ cls.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if selected_class_id and not selected_student %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-person me-2"></i>Step 2: Select Student
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-end">
+                    <input type="hidden" name="class_id" value="{{ selected_class_id }}">
+                    <div class="col-md-8">
+                        <label class="form-label">Select Student</label>
+                        <select name="student_id" class="form-select" required>
+                            <option value="">Choose a student...</option>
+                            {% for student in students %}
+                                <option value="{{ student.pk }}">{{ student.get_full_name|default:student.username }} - {{ student.profile.academic_class.name|default:'No class' }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary w-100">Select Student</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if selected_class_id and selected_student %}
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-person-plus me-2"></i>Step 3: Add Child
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="class_id" value="{{ selected_class_id }}">
+                    <input type="hidden" name="student_id" value="{{ selected_student.pk }}">
+                    <div class="mb-3">
+                        <label class="form-label">Parent</label>
+                        <input type="text" class="form-control" value="{{ parent.get_full_name|default:parent.username }} ({{ parent.profile.unique_id|default:'No code' }})" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Linked Student</label>
+                        <input type="text" class="form-control" value="{{ selected_student.get_full_name|default:selected_student.username }} - {{ selected_student.profile.academic_class.name|default:'No class' }}" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Relationship</label>
+                        <select name="relationship" class="form-select">
+                            <option value="father">Father</option>
+                            <option value="mother">Mother</option>
+                            <option value="guardian" selected>Guardian</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone</label>
+                        <input type="text" name="phone" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control">
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="is_primary" class="form-check-input" id="isPrimary" checked>
+                        <label class="form-check-label" for="isPrimary">Primary Contact</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Child</button>
+                    <a href="{% url 'school:admin_parent_profiles' %}" class="btn btn-outline-secondary ms-2">Cancel</a>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

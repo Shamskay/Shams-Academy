@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Assign Class Teachers{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'school:admin_dashboard' %}">Admin</a></li>
+            <li class="breadcrumb-item active">Class Teachers</li>
+        </ol>
+    </nav>
+    <h1>Assign Class Teachers</h1>
+    <p class="text-muted">Manage class teacher assignments</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-plus-circle me-2"></i>New Assignment
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Class</label>
+                        {{ form.academic_class }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Teacher</label>
+                        {{ form.teacher }}
+                    </div>
+                    <div class="mb-3 form-check">
+                        {{ form.is_active }}
+                        <label class="form-check-label">Active</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Assign</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-list me-2"></i>All Assignments
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Class</th>
+                                <th>Teacher</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ct in class_teachers %}
+                            <tr>
+                                <td>{{ ct.academic_class.name }}</td>
+                                <td>{{ ct.teacher.get_full_name|default:ct.teacher.username }}</td>
+                                <td>
+                                    {% if ct.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm {% if ct.is_active %}btn-warning{% else %}btn-success{% endif %}" data-bs-toggle="modal" data-bs-target="#toggleModal{{ ct.pk }}">
+                                        <i class="bi bi-{% if ct.is_active %}pause-circle{% else %}play-circle{% endif %}"></i> {% if ct.is_active %}Deactivate{% else %}Activate{% endif %}
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#removeModal{{ ct.pk }}">
+                                        <i class="bi bi-trash"></i> Remove
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% for ct in class_teachers %}
+<div class="modal fade" id="toggleModal{{ ct.pk }}" tabindex="-1" aria-labelledby="toggleModalLabel{{ ct.pk }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="toggleModalLabel{{ ct.pk }}">Confirm Status Change</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to {% if ct.is_active %}deactivate{% else %}activate{% endif %} <strong>{{ ct.teacher.get_full_name|default:ct.teacher.username }}</strong> as class teacher for <strong>{{ ct.academic_class.name }}</strong>?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'subjects:admin_toggle_class_teacher' ct.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">Confirm</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="removeModal{{ ct.pk }}" tabindex="-1" aria-labelledby="removeModalLabel{{ ct.pk }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="removeModalLabel{{ ct.pk }}">Remove Class Teacher</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to remove <strong>{{ ct.teacher.get_full_name|default:ct.teacher.username }}</strong> from <strong>{{ ct.academic_class.name }}</strong>?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'subjects:admin_remove_class_teacher' ct.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Remove</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

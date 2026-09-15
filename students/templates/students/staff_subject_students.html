@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Subject Students{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'staff:staff_dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item active">Subject Students</li>
+        </ol>
+    </nav>
+    <h1>Subject Students</h1>
+    <p class="text-muted">Students taking your subjects, organized by class</p>
+</div>
+
+{% for item in class_data %}
+{% with cls=item.class %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-building me-2"></i>{{ cls.name }}</span>
+        <span class="badge bg-secondary">{{ item.subjects|length }} subject{{ item.subjects|length|pluralize }}</span>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <strong>Subjects:</strong>
+            {% for subject in item.subjects %}
+                <span class="badge bg-primary">{{ subject.code }} - {{ subject.name }}</span>
+            {% endfor %}
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                        <tr>
+                            <th>Full Name</th>
+                            <th>Matric Number</th>
+                            <th>My Subjects</th>
+                        </tr>
+                </thead>
+                <tbody>
+                    {% for student in item.students %}
+                    <tr>
+                        <td>{{ student.student.user.get_full_name|default:"-" }}</td>
+                        <td><span class="badge bg-primary">{{ student.student.admission_number|default:"N/A" }}</span></td>
+                        <td>
+                            {% for subject in student.subjects %}
+                                <span class="badge bg-info text-dark">{{ subject.code }}</span>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endwith %}
+{% empty %}
+<div class="card">
+    <div class="card-body">
+        <div class="empty-state">
+            <i class="bi bi-people"></i>
+            <h4>No students assigned to your subjects</h4>
+            <p class="text-muted">Students will appear here once they are assigned to classes where you teach subjects.</p>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

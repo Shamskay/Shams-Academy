@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Results{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'students:admin_students' %}">Students</a></li>
+            <li class="breadcrumb-item active">{{ student.user.get_full_name|default:"-" }}</li>
+        </ol>
+    </nav>
+    <h1>{{ student.user.get_full_name|default:"-" }}</h1>
+    <p class="text-muted">Admission: {{ student.admission_number }} | Class: {{ student.academic_class.name|default:"Not assigned" }}</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-clipboard-check me-2"></i>Test Results
+            </div>
+            <div class="card-body">
+                {% if test_results %}
+                    {% for tr in test_results %}
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-title">{{ tr.test.title }}</div>
+                            <div class="result-score {% if tr.get_percentage >= 70 %}score-high{% elif tr.get_percentage >= 50 %}score-medium{% else %}score-low{% endif %}">
+                                {{ tr.score }}/{{ tr.test.max_score }}
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span>{{ tr.test.subject.name }} ({{ tr.test.subject.code }})</span>
+                            <span>{{ tr.test.term.get_name_display }} | {{ tr.test.academic_class.name }}</span>
+                        </div>
+                        <div class="mt-2">
+                            <div class="progress">
+                                <div class="progress-bar bg-{% if tr.get_percentage >= 70 %}success{% elif tr.get_percentage >= 50 %}warning{% else %}danger{% endif %}"
+                                     role="progressbar" style="width: {{ tr.get_percentage }}%"></div>
+                            </div>
+                            <small class="text-muted">{{ tr.get_percentage }}%</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <h4>No test results</h4>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-journal-check me-2"></i>Exam Results
+            </div>
+            <div class="card-body">
+                {% if exam_results %}
+                    {% for er in exam_results %}
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-title">{{ er.exam.title }}</div>
+                            <div class="result-score {% if er.get_percentage >= 70 %}score-high{% elif er.get_percentage >= 50 %}score-medium{% else %}score-low{% endif %}">
+                                {{ er.score }}/{{ er.exam.max_score }}
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span>{{ er.exam.subject.name }} ({{ er.exam.subject.code }})</span>
+                            <span>{{ er.exam.term.get_name_display }} | {{ er.exam.academic_class.name }}</span>
+                        </div>
+                        <div class="mt-2">
+                            <div class="progress">
+                                <div class="progress-bar bg-{% if er.get_percentage >= 70 %}success{% elif er.get_percentage >= 50 %}warning{% else %}danger{% endif %}"
+                                     role="progressbar" style="width: {{ er.get_percentage }}%"></div>
+                            </div>
+                            <small class="text-muted">{{ er.get_percentage }}%</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <h4>No exam results</h4>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <i class="bi bi-award me-2"></i>Term Results
+    </div>
+    <div class="card-body">
+        {% if term_results %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Term</th>
+                            <th>Class</th>
+                            <th>Average Score</th>
+                            <th>Total Subjects</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tr in term_results %}
+                        <tr>
+                            <td>{{ tr.term.get_name_display }}</td>
+                            <td>{{ tr.academic_class.name }}</td>
+                            <td><strong>{{ tr.average_score }}%</strong></td>
+                            <td>{{ tr.total_subjects }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <h4>No term results</h4>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="text-center mt-4">
+    <a href="{% url 'students:admin_print_student_results' student.pk %}" class="btn btn-primary btn-lg" target="_blank">
+        <i class="bi bi-printer me-2"></i>Print Results
+    </a>
+    <a href="{% url 'students:admin_students' %}" class="btn btn-outline-secondary btn-lg ms-2">Back to Students</a>
+</div>
+{% endblock %}

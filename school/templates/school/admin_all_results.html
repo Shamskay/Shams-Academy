@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}All Student Results{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'school:admin_dashboard' %}">Admin</a></li>
+            <li class="breadcrumb-item active">All Results</li>
+        </ol>
+    </nav>
+    <h1>All Student Results</h1>
+    <p class="text-muted">Overview of all students and their academic results</p>
+    <form method="get" class="row g-3 mt-2">
+        <div class="col-md-4">
+            <input type="text" name="q" class="form-control" placeholder="Search by name, matric..." value="{{ search|default:'' }}">
+        </div>
+        <div class="col-md-3">
+            <select name="class_id" class="form-select">
+                <option value="">All Classes</option>
+                {% for cls in classes %}
+                <option value="{{ cls.pk }}" {% if class_filter == cls.pk|stringformat:"s" %}selected{% endif %}>{{ cls.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Filter</button>
+        </div>
+        {% if search or class_filter %}
+        <div class="col-md-2">
+            <a href="{% url 'school:admin_all_results' %}" class="btn btn-outline-secondary w-100">Clear</a>
+        </div>
+        {% endif %}
+    </form>
+</div>
+
+{% for class_data in class_results %}
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="bi bi-building me-2"></i>{{ class_data.class.name }}
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Matric Number</th>
+                        <th>Tests</th>
+                        <th>Exams</th>
+                        <th>Latest Term Avg</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in class_data.students %}
+                    <tr>
+                        <td>{{ data.student.user.get_full_name|default:data.student.user.username }}</td>
+                        <td><span class="badge bg-primary">{{ data.student.admission_number|default:"N/A" }}</span></td>
+                        <td>{{ data.test_count }}</td>
+                        <td>{{ data.exam_count }}</td>
+                        <td>
+                            {% if data.term_results %}
+                                {% with latest=data.term_results.0 %}
+                                    <strong>{{ latest.average_score }}%</strong>
+                                    <small class="text-muted d-block">{{ latest.term.get_name_display }}</small>
+                                {% endwith %}
+                            {% else %}
+                                <span class="text-muted">No results</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'students:admin_student_results' data.student.pk %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">No students in this class</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
+        <h4>No students yet</h4>
+        <p class="text-muted">Add students to classes to see their results here.</p>
+    </div>
+</div>
+{% endfor %}
+{% include 'pagination.html' %}
+{% endblock %}

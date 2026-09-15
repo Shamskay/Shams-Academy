@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Staff{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'school:admin_dashboard' %}">Admin</a></li>
+            <li class="breadcrumb-item active">Staff</li>
+        </ol>
+    </nav>
+    <h1>Manage Staff</h1>
+    <p class="text-muted">View and manage all staff members</p>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Username</th>
+                        <th>Unique ID</th>
+                        <th>Status</th>
+                        <th>Phone</th>
+                        <th>Subjects / Classes</th>
+                        <th>Class Teacher</th>
+                        <th>Registered</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for staff in staff_members %}
+                    <tr>
+                        <td>{{ staff.user.get_full_name|default:"-" }}</td>
+                        <td>{{ staff.user.username }}</td>
+                        <td><span class="badge bg-primary">{{ staff.unique_id|default:"N/A" }}</span></td>
+                        <td>
+                            {% if staff.is_activated %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ staff.phone|default:"-" }}</td>
+                        <td>
+                            {% for ta in staff.user.teaching_assignments.all %}
+                                <span class="badge bg-secondary">{{ ta.subject.code }} - {{ ta.academic_class.name }}</span>
+                            {% empty %}
+                                <span class="text-muted">No assignments</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% for ct in staff.user.class_teacher_assignments.all %}
+                                <span class="badge bg-success">{{ ct.academic_class.name }}</span>
+                            {% empty %}
+                                <span class="text-muted">-</span>
+                            {% endfor %}
+                        </td>
+                        <td>{{ staff.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <form method="post" action="{% url 'staff:admin_toggle_staff_status' staff.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm {% if staff.is_activated %}btn-warning{% else %}btn-success{% endif %}">
+                                        {% if staff.is_activated %}
+                                            <i class="bi bi-pause"></i> Deactivate
+                                        {% else %}
+                                            <i class="bi bi-play"></i> Activate
+                                        {% endif %}
+                                    </button>
+                                </form>
+                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{% url 'staff:admin_delete_staff' staff.pk %}" data-delete-name="staff {{ staff.user.get_full_name|default:staff.user.username }}">
+                                    <i class="bi bi-trash"></i> Remove
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

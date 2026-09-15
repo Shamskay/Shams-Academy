@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Term Results{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'students:my_results' %}">My Results</a></li>
+            <li class="breadcrumb-item active">Term Results</li>
+        </ol>
+    </nav>
+    <h1>Term Results</h1>
+    <p class="text-muted">Your academic performance across terms</p>
+</div>
+
+<div class="row g-4 mb-5">
+    {% if term_results %}
+        {% for item in term_results %}
+        {% with tr=item.result grade=item.grade %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">{{ tr.term.get_name_display }}</h5>
+                    <p class="text-muted">{{ tr.academic_class.name }}</p>
+                    <div class="score-display {% if tr.average_score >= 70 %}score-high{% elif tr.average_score >= 50 %}score-medium{% else %}score-low{% endif %}">
+                        {{ tr.average_score }}%
+                        {% if grade %}
+                            <span class="badge bg-secondary ms-2">{{ grade.name }}</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-muted">{{ tr.total_subjects }} subjects</p>
+                    {% if grade and grade.remark %}
+                        <p class="small text-muted mt-2 mb-0">{{ grade.remark }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
+                    <h4>No term results yet</h4>
+                    <p class="text-muted">Term results will be calculated by the admin.</p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+{% if promotion_decisions %}
+<div class="row g-4 mb-5">
+    <div class="col-12">
+        <h2 class="section-title">Promotion Status</h2>
+    </div>
+    {% for pd in promotion_decisions %}
+    <div class="col-md-6 col-lg-4">
+        <div class="promotion-card {% if pd.is_promoted %}promoted{% else %}repeated{% endif %}">
+            {% if pd.is_promoted %}
+                <i class="bi bi-check-circle-fill"></i>
+                <h3>Promoted</h3>
+            {% else %}
+                <i class="bi bi-x-circle-fill"></i>
+                <h3>Repeated</h3>
+            {% endif %}
+            <p class="mb-1">{{ pd.term.get_name_display }}</p>
+            <p class="mb-1 small">{{ pd.from_class.name }} {% if pd.is_promoted %}-> {{ pd.to_class.name }}{% endif %}</p>
+            <p class="mb-0 small">Average: {{ pd.average_score }}%</p>
+            {% if pd.next_term_resumption_date %}
+                <p class="mb-0 mt-2 small">Next term starts: {{ pd.next_term_resumption_date }}</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="text-center mt-4">
+    <a href="{% url 'students:download_term_results_pdf' %}" class="btn btn-primary btn-lg">
+        <i class="bi bi-download me-2"></i>Download Term Results PDF
+    </a>
+</div>
+{% endblock %}

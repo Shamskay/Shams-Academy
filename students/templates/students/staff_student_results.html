@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ student.user.get_full_name|default:student.user.username }} - Results{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'staff:staff_dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'students:staff_class_results' academic_class.pk %}">{{ academic_class.name }}</a></li>
+            <li class="breadcrumb-item active">{{ student.user.get_full_name|default:student.user.username }}</li>
+        </ol>
+    </nav>
+    <h1>{{ student.user.get_full_name|default:student.user.username }}</h1>
+    <p class="text-muted">Admission: {{ student.admission_number }} | Class: {{ academic_class.name }}</p>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <a href="{% url 'students:staff_class_results' academic_class.pk %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Class Results
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Results by Subject</h5>
+    </div>
+    <div class="card-body">
+        {% if subject_data %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Subject</th>
+                            <th>Test Score</th>
+                            <th>Exam Score</th>
+                            <th>Total</th>
+                            <th>Percentage</th>
+                            <th>Grade</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for data in subject_data %}
+                        <tr>
+                            <td class="fw-medium">{{ data.subject.code }} - {{ data.subject.name }}</td>
+                            <td>
+                                {% if data.test_result %}
+                                    {{ data.test_result.score }}/{{ data.test_result.test.max_score }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if data.exam_result %}
+                                    {{ data.exam_result.score }}/{{ data.exam_result.exam.max_score }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if data.test_result and data.exam_result %}
+                                    {{ data.total_score }}/{{ data.max_total }}
+                                {% elif data.test_result %}
+                                    {{ data.test_result.score }}/{{ data.test_result.test.max_score }}
+                                {% elif data.exam_result %}
+                                    {{ data.exam_result.score }}/{{ data.exam_result.exam.max_score }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if data.percentage > 0 %}
+                                    {{ data.percentage|floatformat:2 }}%
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if data.grade %}
+                                    <span class="badge bg-info">{{ data.grade.name }}</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted text-center py-3">No results found.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-calendar-check me-2"></i>Term Results</h5>
+    </div>
+    <div class="card-body">
+        {% if term_results %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Term</th>
+                            <th>Average Score</th>
+                            <th>Total Subjects</th>
+                            <th>Grade</th>
+                            <th>Decision</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in term_results %}
+                        <tr>
+                            <td>{{ item.result.term.get_name_display }}</td>
+                            <td>{{ item.result.average_score }}%</td>
+                            <td>{{ item.result.total_subjects }}</td>
+                            <td>
+                                {% if item.grade %}
+                                    <span class="badge bg-info">{{ item.grade.name }}</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.result.promotion_decision %}
+                                    <span class="badge {% if item.result.promotion_decision.is_promoted %}bg-success{% else %}bg-warning{% endif %}">
+                                        {% if item.result.promotion_decision.is_promoted %}Promoted{% else %}Repeated{% endif %}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">Pending</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted text-center py-3">No term results found.</p>
+        {% endif %}
+    </div>
+</div>
+
+{% if test_results or exam_results %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Detailed Test & Exam Results</h5>
+    </div>
+    <div class="card-body">
+        {% if test_results %}
+        <h6 class="text-danger mb-3"><i class="bi bi-clipboard-check me-1"></i>Test Results</h6>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Test</th>
+                        <th>Subject</th>
+                        <th>Term</th>
+                        <th>Score</th>
+                        <th>Max</th>
+                        <th>Percentage</th>
+                        <th>Grade</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in test_results %}
+                    <tr>
+                        <td>{{ item.result.test.title }}</td>
+                        <td>{{ item.result.test.subject.code }} - {{ item.result.test.subject.name }}</td>
+                        <td>{{ item.result.test.term.get_name_display }}</td>
+                        <td>{{ item.result.score }}</td>
+                        <td>{{ item.result.test.max_score }}</td>
+                        <td>{{ item.result.get_percentage|floatformat:2 }}%</td>
+                        <td>
+                            {% if item.grade %}
+                                <span class="badge bg-info">{{ item.grade.name }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.result.submitted_at|date:"M d, Y H:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if exam_results %}
+        <h6 class="text-primary mb-3 mt-4"><i class="bi bi-journal-check me-1"></i>Exam Results</h6>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Exam</th>
+                        <th>Subject</th>
+                        <th>Term</th>
+                        <th>Score</th>
+                        <th>Max</th>
+                        <th>Percentage</th>
+                        <th>Grade</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in exam_results %}
+                    <tr>
+                        <td>{{ item.result.exam.title }}</td>
+                        <td>{{ item.result.exam.subject.code }} - {{ item.result.exam.subject.name }}</td>
+                        <td>{{ item.result.exam.term.get_name_display }}</td>
+                        <td>{{ item.result.score }}</td>
+                        <td>{{ item.result.exam.max_score }}</td>
+                        <td>{{ item.result.get_percentage|floatformat:2 }}%</td>
+                        <td>
+                            {% if item.grade %}
+                                <span class="badge bg-info">{{ item.grade.name }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.result.submitted_at|date:"M d, Y H:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

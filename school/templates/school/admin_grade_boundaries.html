@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Grade Boundaries{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'school:admin_dashboard' %}">Admin</a></li>
+            <li class="breadcrumb-item active">Grade Boundaries</li>
+        </ol>
+    </nav>
+    <h1>Grade Boundaries</h1>
+    <p class="text-muted">Define grading scale for the school</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-plus-circle me-2"></i>Add Grade Boundary
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label">Grade</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="text-danger small">{{ form.name.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Min Score</label>
+                        {{ form.min_score }}
+                        {% if form.min_score.errors %}
+                            <div class="text-danger small">{{ form.min_score.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Max Score</label>
+                        {{ form.max_score }}
+                        {% if form.max_score.errors %}
+                            <div class="text-danger small">{{ form.max_score.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Remark</label>
+                        {{ form.remark }}
+                        {% if form.remark.errors %}
+                            <div class="text-danger small">{{ form.remark.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Boundary</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-list me-2"></i>Existing Boundaries
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Grade</th>
+                                <th>Min Score</th>
+                                <th>Max Score</th>
+                                <th>Remark</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for boundary in boundaries %}
+                            <tr>
+                                <td><strong>{{ boundary.name }}</strong></td>
+                                <td>{{ boundary.min_score }}</td>
+                                <td>{{ boundary.max_score }}</td>
+                                <td>{{ boundary.remark|default:"-" }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{% url 'school:admin_delete_grade_boundary' boundary.pk %}" data-delete-name="grade boundary {{ boundary.name }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">No grade boundaries defined yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

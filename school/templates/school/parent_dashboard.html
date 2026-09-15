@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Parent Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item active">Parent Dashboard</li>
+        </ol>
+    </nav>
+    <h1>Parent Dashboard</h1>
+    <p class="text-muted">Monitor your children's academic progress</p>
+</div>
+
+{% if children %}
+    {% for child in children %}
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>
+                <i class="bi bi-person me-2"></i>
+                <strong>{{ child.student.get_full_name|default:child.student.username }}</strong>
+                <span class="text-muted ms-2">({{ child.get_relationship_display }})</span>
+                {% if child.status == 'Graduated' %}
+                    <span class="badge bg-success ms-2">Graduated</span>
+                {% elif child.status == 'Withdrawn' %}
+                    <span class="badge bg-warning text-dark ms-2">Withdrawn</span>
+                {% endif %}
+            </span>
+            <a href="{% url 'school:parent_child_detail' child.student.pk %}" class="btn btn-sm btn-primary">View Details</a>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <p class="mb-1"><strong>Class:</strong> {{ child.academic_class.name|default:"N/A" }}</p>
+                    <p class="mb-1"><strong>Admission No:</strong> {{ child.profile.admission_number|default:"N/A" }}</p>
+                </div>
+                <div class="col-md-3">
+                    <p class="mb-1"><strong>Tests Taken:</strong> {{ child.test_count }}</p>
+                    <p class="mb-1"><strong>Exams Taken:</strong> {{ child.exam_count }}</p>
+                </div>
+                <div class="col-md-3">
+                    {% if child.term_results %}
+                        {% with latest=child.term_results.0 %}
+                            <p class="mb-1"><strong>Latest Term Avg:</strong> {{ latest.average_score }}%</p>
+                            <p class="mb-1"><strong>Term:</strong> {{ latest.term.get_name_display }}</p>
+                        {% endwith %}
+                    {% else %}
+                        <p class="mb-1 text-muted">No term results yet</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-3">
+                    <p class="mb-1"><strong>Report Cards:</strong> {{ child.report_cards|length }}</p>
+                </div>
+            </div>
+            
+            {% if child.recent_results %}
+            <div class="mt-3">
+                <h6 class="text-muted">Recent Results</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Type</th>
+                                <th>Score</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in child.recent_results %}
+                            <tr>
+                                <td>{{ result.test.subject.name }}</td>
+                                <td>Test</td>
+                                <td>{{ result.score }}/{{ result.test.max_score }}</td>
+                                <td>{{ result.submitted_at|date:"M d, Y" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-people" style="font-size: 3rem; opacity: 0.3;"></i>
+            <h4>No children linked</h4>
+            <p class="text-muted">Contact the school administration to link your children to your account.</p>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

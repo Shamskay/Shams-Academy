@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}My Subjects{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item active">My Subjects</li>
+        </ol>
+    </nav>
+    <h1>My Subjects</h1>
+    <p class="text-muted">
+        {% if current_term %}
+            {{ current_term.get_name_display }} - {{ academic_class.name }}
+        {% else %}
+            {{ academic_class.name }}
+        {% endif %}
+    </p>
+</div>
+
+<!-- Subjects Section -->
+<div class="card mb-4">
+    <div class="assessment-header">
+        <h5 class="mb-0">
+            <i class="bi bi-book-half me-2"></i>My Subjects
+        </h5>
+        <div class="assessment-meta">
+            <span class="assessment-meta-item">
+                <i class="bi bi-grid-3x3-gap"></i> {{ class_subjects.count }} subject{{ class_subjects.count|pluralize }}
+            </span>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        {% if class_subjects %}
+            <div class="row g-3 p-3">
+                {% for cs in class_subjects %}
+                <div class="col-md-6 col-lg-4">
+                    <a href="{% url 'materials:student_materials' cs.subject.id %}" class="subject-card h-100">
+                        <div class="subject-icon">
+                            <i class="bi bi-book"></i>
+                        </div>
+                        <h5>{{ cs.subject.name }}</h5>
+                        <span class="subject-code">{{ cs.subject.code }}</span>
+                        <div class="mt-2">
+                            <span class="badge bg-primary">Teacher: {{ cs.teacher.get_full_name|default:cs.teacher.username }}</span>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+        <div class="empty-state-modern">
+            <i class="bi bi-inbox"></i>
+            <h4>No Subjects Assigned</h4>
+            <p>You don't have any subjects assigned yet. Contact your class teacher or admin for subject assignments.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Available Assessments Section -->
+{% if tests or exams %}
+<div class="card">
+    <div class="assessment-header">
+        <h5 class="mb-0">
+            <i class="bi bi-clipboard-data me-2"></i>Available Assessments
+        </h5>
+        <div class="assessment-meta">
+            <span class="assessment-meta-item">
+                <i class="bi bi-clipboard-check"></i> {{ tests.count }} test{{ tests.count|pluralize }}
+            </span>
+            <span class="assessment-meta-item">
+                <i class="bi bi-journal-check"></i> {{ exams.count }} exam{{ exams.count|pluralize }}
+            </span>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        {% if tests %}
+        <div class="p-3 border-bottom">
+            <h6 class="text-primary mb-3">
+                <i class="bi bi-clipboard-check me-1"></i>Tests
+            </h6>
+            <div class="row g-3">
+                {% for test in tests %}
+                <div class="col-md-6">
+                    <div class="question-block p-3 h-100" style="border-radius: 0.5rem; border-left: 4px solid #1a237e;">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="question-text mb-0">{{ test.title }}</h6>
+                            <span class="badge bg-primary">{{ test.max_score }} pts</span>
+                        </div>
+                        <p class="text-muted mb-2 small">{{ test.subject.name }} | {{ test.term.get_name_display }}</p>
+                        <a href="{% url 'students:take_test' test.id %}" class="btn btn-primary btn-sm w-100">
+                            <i class="bi bi-play-circle me-1"></i>Take Test
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if exams %}
+        <div class="p-3">
+            <h6 class="text-danger mb-3">
+                <i class="bi bi-journal-check me-1"></i>Exams
+            </h6>
+            <div class="row g-3">
+                {% for exam in exams %}
+                <div class="col-md-6">
+                    <div class="question-block p-3 h-100" style="border-radius: 0.5rem; border-left: 4px solid #d63031;">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="question-text mb-0">{{ exam.title }}</h6>
+                            <span class="badge bg-danger">{{ exam.max_score }} pts</span>
+                        </div>
+                        <p class="text-muted mb-2 small">{{ exam.subject.name }} | {{ exam.term.get_name_display }}</p>
+                        <a href="{% url 'students:take_exam' exam.id %}" class="btn btn-danger btn-sm w-100">
+                            <i class="bi bi-play-circle me-1"></i>Take Exam
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% elif not class_subjects %}
+<div class="alert alert-info mt-4">
+    <i class="bi bi-info-circle me-2"></i>No assessments available for the current term.
+</div>
+{% endif %}
+{% endblock %}

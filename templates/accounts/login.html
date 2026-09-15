@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Login - Shamskay Academy{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="/static/css/login.css">
+{% endblock %}
+
+{% block page_content %}
+<div class="login-page">
+    <div class="login-card">
+        <div class="login-card-header">
+            <h2>Welcome back</h2>
+            <p>Sign in to your account to continue</p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="login-alert login-alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="login-alert login-alert-danger">
+                    {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="mb-3">
+                <label for="{{ form.username.id_for_label }}" class="form-label">Matric Number / Username</label>
+                <div class="input-wrapper">
+                    <i class="bi bi-person input-icon"></i>
+                    {{ form.username }}
+                </div>
+                {% if form.username.errors %}
+                    <div class="login-error">{{ form.username.errors|striptags }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
+                <div class="input-wrapper">
+                    <i class="bi bi-lock input-icon"></i>
+                    {{ form.password }}
+                </div>
+                {% if form.password.errors %}
+                    <div class="login-error">{{ form.password.errors|striptags }}</div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="login-btn">
+                <span>Sign In</span>
+                <i class="bi bi-arrow-right"></i>
+            </button>
+        </form>
+
+        <div class="login-card-footer">
+            <p>Don't have an account? <a href="{% url 'accounts:role_selection' %}">Create one</a></p>
+            <p class="mt-2"><a href="{% url 'accounts:password_reset' %}">Forgot password?</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

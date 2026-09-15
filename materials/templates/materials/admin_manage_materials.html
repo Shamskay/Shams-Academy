@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Materials{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'school:admin_dashboard' %}">Admin</a></li>
+            <li class="breadcrumb-item active">Materials</li>
+        </ol>
+    </nav>
+    <h1>Manage Study Materials</h1>
+    <p class="text-muted">View all uploaded materials</p>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Subject</th>
+                        <th>Term</th>
+                        <th>Uploaded By</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in materials %}
+                    <tr>
+                        <td>{{ m.title }}</td>
+                        <td>{{ m.subject.name }}</td>
+                        <td>{{ m.term.get_name_display }}</td>
+                        <td>{{ m.uploaded_by.get_full_name|default:m.uploaded_by.username }}</td>
+                        <td>{{ m.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            {% if m.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{% url 'materials:admin_delete_material' m.pk %}" data-delete-name="material {{ m.title }}">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Exams{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'school:admin_dashboard' %}">Admin</a></li>
+            <li class="breadcrumb-item active">Exams</li>
+        </ol>
+    </nav>
+    <h1>Manage Exams</h1>
+    <p class="text-muted">View all exams</p>
+    <form method="get" class="row g-3 mt-2">
+        <div class="col-md-4">
+            <input type="text" name="q" class="form-control" placeholder="Search exams..." value="{{ search|default:'' }}">
+        </div>
+        <div class="col-md-3">
+            <select name="term" class="form-select">
+                <option value="">All Terms</option>
+                {% for term in terms %}
+                <option value="{{ term.pk }}" {% if term_filter == term.pk|stringformat:"s" %}selected{% endif %}>{{ term.get_name_display }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="class_id" class="form-select">
+                <option value="">All Classes</option>
+                {% for cls in classes %}
+                <option value="{{ cls.pk }}" {% if class_filter == cls.pk|stringformat:"s" %}selected{% endif %}>{{ cls.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Filter</button>
+        </div>
+    </form>
+    {% if search or term_filter or class_filter %}
+    <div class="mt-2">
+        <a href="{% url 'assessments:admin_manage_exams' %}" class="btn btn-sm btn-outline-secondary">Clear Filters</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Subject</th>
+                        <th>Term</th>
+                        <th>Class</th>
+                        <th>Date</th>
+                        <th>Max Score</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in page_obj %}
+                    <tr>
+                        <td>{{ e.title }}</td>
+                        <td>{{ e.subject.name }}</td>
+                        <td>{{ e.term.get_name_display }}</td>
+                        <td>{{ e.academic_class.name }}</td>
+                        <td>{{ e.date }}</td>
+                        <td>{{ e.max_score }}</td>
+                        <td>
+                            {% if e.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{% url 'assessments:admin_delete_exam' e.pk %}" data-delete-name="exam {{ e.title }}">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% include 'pagination.html' %}
+
+{% endblock %}
