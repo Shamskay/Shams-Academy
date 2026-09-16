@@ -1,1 +1,0 @@
-# Shams-Academy
