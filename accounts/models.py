@@ -110,4 +110,9 @@ from django.dispatch import receiver
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        Profile.objects.get_or_create(user=instance)
+        if instance.is_superuser:
+            Profile.objects.get_or_create(user=instance, role=Profile.ROLE_ADMIN)
+        elif instance.is_staff:
+            Profile.objects.get_or_create(user=instance, role=Profile.ROLE_STAFF)
+        else:
+            Profile.objects.get_or_create(user=instance)
