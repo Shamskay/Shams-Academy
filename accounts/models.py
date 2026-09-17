@@ -50,6 +50,12 @@ class Profile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     activation_token = models.CharField(max_length=64, unique=True, blank=True, null=True)
     is_activated = models.BooleanField(default=False)
+    # Student password reset token (admin-generated)
+    password_reset_token = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    password_reset_token_created_at = models.DateTimeField(blank=True, null=True, help_text='Timestamp when reset token was generated')
+    # Parent OTP for password reset
+    otp_code = models.CharField(max_length=6, blank=True, null=True)
+    otp_created_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         ordering = ['user__username']

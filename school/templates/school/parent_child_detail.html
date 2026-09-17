@@ -104,20 +104,15 @@
             <div class="card-body">
                 {% if test_results %}
                     {% for item in test_results %}
-                    {% with tr=item.result grade=item.grade %}
                     <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
                         <div>
-                            <strong>{{ tr.test.title }}</strong>
-                            <div class="text-muted small">{{ tr.test.subject.name }} - {{ tr.test.academic_class.name }}</div>
+                            <strong>{{ item.test.title }}</strong>
+                            <div class="text-muted small">{{ item.test.subject.name }} - {{ item.test.academic_class.name }}</div>
                         </div>
-                        <span class="badge {% if tr.get_percentage >= 70 %}bg-success{% elif tr.get_percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}">
-                            {{ tr.score }}/{{ tr.test.max_score }}
-                            {% if grade %}
-                                <span class="badge bg-secondary ms-2">{{ grade.name }}</span>
-                            {% endif %}
+                        <span class="badge {% if item.get_percentage >= 70 %}bg-success{% elif item.get_percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}">
+                            {{ item.score }}/{{ item.test.max_score }}
                         </span>
                     </div>
-                    {% endwith %}
                     {% endfor %}
                 {% else %}
                     <div class="empty-state">
@@ -138,20 +133,15 @@
             <div class="card-body">
                 {% if exam_results %}
                     {% for item in exam_results %}
-                    {% with er=item.result grade=item.grade %}
                     <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
                         <div>
-                            <strong>{{ er.exam.title }}</strong>
-                            <div class="text-muted small">{{ er.exam.subject.name }} - {{ er.exam.academic_class.name }}</div>
+                            <strong>{{ item.exam.title }}</strong>
+                            <div class="text-muted small">{{ item.exam.subject.name }} - {{ item.exam.academic_class.name }}</div>
                         </div>
-                        <span class="badge {% if er.get_percentage >= 70 %}bg-success{% elif er.get_percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}">
-                            {{ er.score }}/{{ er.exam.max_score }}
-                            {% if grade %}
-                                <span class="badge bg-secondary ms-2">{{ grade.name }}</span>
-                            {% endif %}
+                        <span class="badge {% if item.get_percentage >= 70 %}bg-success{% elif item.get_percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}">
+                            {{ item.score }}/{{ item.exam.max_score }}
                         </span>
                     </div>
-                    {% endwith %}
                     {% endfor %}
                 {% else %}
                     <div class="empty-state">

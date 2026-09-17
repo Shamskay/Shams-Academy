@@ -22,16 +22,12 @@
             </div>
             <div class="card-body">
                 {% if test_results %}
-                    {% for item in test_results %}
-                    {% with tr=item.result grade=item.grade %}
+                    {% for tr in test_results %}
                     <div class="result-card">
                         <div class="result-header">
                             <div class="result-title">{{ tr.test.title }}</div>
                             <div class="result-score {% if tr.get_percentage >= 70 %}score-high{% elif tr.get_percentage >= 50 %}score-medium{% else %}score-low{% endif %}">
                                 {{ tr.score }}/{{ tr.test.max_score }}
-                                {% if grade %}
-                                    <span class="badge bg-secondary ms-2">{{ grade.name }}</span>
-                                {% endif %}
                             </div>
                         </div>
                         <div class="d-flex justify-content-between text-muted small">
@@ -45,11 +41,7 @@
                             </div>
                         <small class="text-muted">{{ tr.get_percentage }}%</small>
                         </div>
-                        {% if grade and grade.remark %}
-                            <p class="text-muted small mt-2 mb-0">{{ grade.remark }}</p>
-                        {% endif %}
                     </div>
-                    {% endwith %}
                     {% endfor %}
                 {% else %}
                     <div class="empty-state">
@@ -69,16 +61,12 @@
             </div>
             <div class="card-body">
                 {% if exam_results %}
-                    {% for item in exam_results %}
-                    {% with er=item.result grade=item.grade %}
+                    {% for er in exam_results %}
                     <div class="result-card">
                         <div class="result-header">
                             <div class="result-title">{{ er.exam.title }}</div>
                             <div class="result-score {% if er.get_percentage >= 70 %}score-high{% elif er.get_percentage >= 50 %}score-medium{% else %}score-low{% endif %}">
                                 {{ er.score }}/{{ er.exam.max_score }}
-                                {% if grade %}
-                                    <span class="badge bg-secondary ms-2">{{ grade.name }}</span>
-                                {% endif %}
                             </div>
                         </div>
                         <div class="d-flex justify-content-between text-muted small">
@@ -92,11 +80,7 @@
                             </div>
                             <small class="text-muted">{{ er.get_percentage }}%</small>
                         </div>
-                        {% if grade and grade.remark %}
-                            <p class="text-muted small mt-2 mb-0">{{ grade.remark }}</p>
-                        {% endif %}
                     </div>
-                    {% endwith %}
                     {% endfor %}
                 {% else %}
                     <div class="empty-state">

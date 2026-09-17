@@ -693,8 +693,6 @@ def parent_child_detail(request, student_id):
     ).select_related('term', 'academic_class').order_by('-term')
     
     boundaries = GradeBoundary.objects.filter(is_active=True).order_by('-min_score')
-    annotated_tests = annotate_results(test_results, 'score', boundaries)
-    annotated_exams = annotate_results(exam_results, 'score', boundaries)
     annotated_term_results = annotate_results(term_results, 'average_score', boundaries)
     
     report_cards = ReportCard.objects.filter(
@@ -708,8 +706,8 @@ def parent_child_detail(request, student_id):
         'academic_class': academic_class,
         'relationship': parent_link.get_relationship_display(),
         'current_term': current_term,
-        'test_results': annotated_tests,
-        'exam_results': annotated_exams,
+        'test_results': test_results,
+        'exam_results': exam_results,
         'term_results': annotated_term_results,
         'report_cards': report_cards,
     }

@@ -25,10 +25,16 @@ def create_audit_log(user, action, model_name, obj, changes=None, request=None):
 
 
 def get_user_profile(user):
+    if not user or user.is_anonymous:
+        return None
     try:
         return user.profile
     except Profile.DoesNotExist:
         return None
+
+
+def user_profile_context(request):
+    return {'user_profile': get_user_profile(request.user)}
 
 
 def get_grade_boundaries():

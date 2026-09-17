@@ -162,29 +162,19 @@
                         <th>Subject</th>
                         <th>Term</th>
                         <th>Score</th>
-                        <th>Max</th>
                         <th>Percentage</th>
-                        <th>Grade</th>
                         <th>Date</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in test_results %}
                     <tr>
-                        <td>{{ item.result.test.title }}</td>
-                        <td>{{ item.result.test.subject.code }} - {{ item.result.test.subject.name }}</td>
-                        <td>{{ item.result.test.term.get_name_display }}</td>
-                        <td>{{ item.result.score }}</td>
-                        <td>{{ item.result.test.max_score }}</td>
-                        <td>{{ item.result.get_percentage|floatformat:2 }}%</td>
-                        <td>
-                            {% if item.grade %}
-                                <span class="badge bg-info">{{ item.grade.name }}</span>
-                            {% else %}
-                                <span class="text-muted">-</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ item.result.submitted_at|date:"M d, Y H:i" }}</td>
+                        <td>{{ item.test.title }}</td>
+                        <td>{{ item.test.subject.code }} - {{ item.test.subject.name }}</td>
+                        <td>{{ item.test.term.get_name_display }}</td>
+                        <td>{{ item.score }}/{{ item.test.max_score }}</td>
+                        <td>{{ item.get_percentage|floatformat:2 }}%</td>
+                        <td>{{ item.submitted_at|date:"M d, Y H:i" }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -202,29 +192,19 @@
                         <th>Subject</th>
                         <th>Term</th>
                         <th>Score</th>
-                        <th>Max</th>
                         <th>Percentage</th>
-                        <th>Grade</th>
                         <th>Date</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in exam_results %}
                     <tr>
-                        <td>{{ item.result.exam.title }}</td>
-                        <td>{{ item.result.exam.subject.code }} - {{ item.result.exam.subject.name }}</td>
-                        <td>{{ item.result.exam.term.get_name_display }}</td>
-                        <td>{{ item.result.score }}</td>
-                        <td>{{ item.result.exam.max_score }}</td>
-                        <td>{{ item.result.get_percentage|floatformat:2 }}%</td>
-                        <td>
-                            {% if item.grade %}
-                                <span class="badge bg-info">{{ item.grade.name }}</span>
-                            {% else %}
-                                <span class="text-muted">-</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ item.result.submitted_at|date:"M d, Y H:i" }}</td>
+                        <td>{{ item.exam.title }}</td>
+                        <td>{{ item.exam.subject.code }} - {{ item.exam.subject.name }}</td>
+                        <td>{{ item.exam.term.get_name_display }}</td>
+                        <td>{{ item.score }}/{{ item.exam.max_score }}</td>
+                        <td>{{ item.get_percentage|floatformat:2 }}%</td>
+                        <td>{{ item.submitted_at|date:"M d, Y H:i" }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

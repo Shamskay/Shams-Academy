@@ -130,7 +130,8 @@ class TestParentChildLinking:
         response = client.post(
             reverse('school:admin_add_child_to_parent', args=[parent_user.pk]),
             {
-                'student': student_user.pk,
+                'student_id': student_user.pk,
+                'class_id': str(academic_class.pk),
                 'relationship': 'father',
                 'phone': '08012345678',
                 'email': 'parent@test.com',
@@ -140,27 +141,35 @@ class TestParentChildLinking:
         assert response.status_code == 302
         assert ParentProfile.objects.filter(parent=parent_user, student=student_user).exists()
 
-    def test_parent_can_have_multiple_children(self, client, db, admin_user, parent_user):
+    def test_parent_can_have_multiple_children(self, client, db, admin_user, parent_user, academic_class):
         student1 = User.objects.create_user(username='child1', password='pass1')
         Profile.objects.filter(user=student1).update(
             role=Profile.ROLE_STUDENT,
             is_activated=True,
-            status=Profile.STATUS_ACTIVE
+            status=Profile.STATUS_ACTIVE,
+            admission_number='STU-C1'
         )
+        student1.profile.academic_class = academic_class
+        student1.profile.save()
+
         student2 = User.objects.create_user(username='child2', password='pass2')
         Profile.objects.filter(user=student2).update(
             role=Profile.ROLE_STUDENT,
             is_activated=True,
-            status=Profile.STATUS_ACTIVE
+            status=Profile.STATUS_ACTIVE,
+            admission_number='STU-C2'
         )
+        student2.profile.academic_class = academic_class
+        student2.profile.save()
+
         client.login(username='admin', password='adminpass123')
         client.post(
             reverse('school:admin_add_child_to_parent', args=[parent_user.pk]),
-            {'student': student1.pk, 'relationship': 'father'}
+            {'student_id': student1.pk, 'class_id': str(academic_class.pk), 'relationship': 'father'}
         )
         client.post(
             reverse('school:admin_add_child_to_parent', args=[parent_user.pk]),
-            {'student': student2.pk, 'relationship': 'mother'}
+            {'student_id': student2.pk, 'class_id': str(academic_class.pk), 'relationship': 'mother'}
         )
         assert ParentProfile.objects.filter(parent=parent_user).count() == 2
 

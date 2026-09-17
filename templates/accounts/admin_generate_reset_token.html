@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin - Generate Student Reset Token{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'school:admin_dashboard' %}">Admin</a></li>
+            <li class="breadcrumb-item active">Generate Student Reset Token</li>
+        </ol>
+    </nav>
+    <h1>Generate Student Password Reset Token</h1>
+    <p class="text-muted">Generate a 6-digit token for a student to reset their password</p>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-funnel me-2"></i>Step 1: Select Class
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-8">
+                        <label class="form-label">Select Class</label>
+                        <select name="class_id" class="form-select">
+                            <option value="">-- Choose a class --</option>
+                            {% for cls in classes %}
+                                <option value="{{ cls.pk }}" {% if selected_class and selected_class.pk == cls.pk %}selected{% endif %}>{{ cls.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if selected_class %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-person me-2"></i>Step 2: Select Student ({{ selected_class.name }})
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="class_id" value="{{ selected_class.pk }}">
+                    <div class="mb-3">
+                        <label class="form-label">Select Student</label>
+                        <select name="student_id" class="form-select" required>
+                            <option value="">-- Choose a student --</option>
+                            {% for student in students %}
+                            <option value="{{ student.pk }}">
+                                {{ student.user.get_full_name|default:student.user.username }}
+                                ({{ student.admission_number }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Generate Token</button>
+                    <a href="{% url 'accounts:admin_generate_student_reset_token' %}" class="btn btn-outline-secondary ms-2">Change Class</a>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>Select a class to see the students in that class.
+        </div>
+        {% endif %}
+
+        {% if generated_token %}
+        <div class="card mb-4 border-success">
+            <div class="card-header bg-success text-white">
+                <i class="bi bi-check-circle me-2"></i>Reset Token Generated
+            </div>
+            <div class="card-body text-center">
+                <p class="mb-2"><strong>Student:</strong> {{ generated_for }}</p>
+                <p class="mb-3"><strong>6-Digit Token:</strong></p>
+                <div class="input-group input-group-lg justify-content-center mb-3" style="max-width: 300px; margin: 0 auto;">
+                    <input type="text" id="generatedToken" class="form-control text-center fw-bold fs-3" value="{{ generated_token }}" readonly>
+                    <button class="btn btn-outline-secondary" type="button" id="copyTokenBtn">
+                        <i class="bi bi-clipboard"></i> Copy
+                    </button>
+                </div>
+                <p class="text-muted small">Share this token with the student to reset their password.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('copyTokenBtn')?.addEventListener('click', function() {
+    var tokenField = document.getElementById('generatedToken');
+    tokenField.select();
+    document.execCommand('copy');
+    this.innerHTML = '<i class="bi bi-clipboard-check"></i> Copied!';
+    setTimeout(() => { this.innerHTML = '<i class="bi bi-clipboard"></i> Copy'; }, 2000);
+});
+</script>
+{% endblock %}

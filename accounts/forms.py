@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 from .models import Profile
 from school.models import AcademicClass
@@ -172,3 +173,81 @@ class ProfileUpdateForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             if field.widget.__class__.__name__ != 'ClearableFileInput':
                 field.widget.attrs.update({'class': 'form-control'})
+
+
+class StudentPasswordResetTokenForm(forms.Form):
+    """Admin form to generate password reset token for students"""
+    token = forms.CharField(
+        max_length=6, min_length=6, 
+        label='6-Digit Reset Token', 
+        widget=forms.TextInput(attrs={'placeholder': 'Enter 6-digit token'})
+    )
+
+    def clean_token(self):
+        token = self.cleaned_data['token']
+        try:
+            profile = Profile.objects.get(password_reset_token=token, role=Profile.ROLE_STUDENT)
+        except Profile.DoesNotExist:
+            raise forms.ValidationError('Invalid or expired reset token.')
+        
+        if profile.password_reset_token_created_at:
+            from datetime import timedelta
+            if timezone.now() - profile.password_reset_token_created_at > timedelta(minutes=10):
+                raise forms.ValidationError('This reset token has expired. Please ask the admin to generate a new one.')
+        
+        return token
+
+
+class StudentPasswordResetForm(forms.Form):
+    """Student form to reset password using admin token"""
+    password1 = forms.CharField(widget=forms.PasswordInput, label='New Password')
+    password2 = forms.CharField(widget=forms.PasswordInput, label='Confirm Password')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'form-control'})
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get('password1')
+        password2 = cleaned_data.get('password2')
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError('Passwords do not match.')
+        return cleaned_data
+
+
+class ParentOTPRequestForm(forms.Form):
+    """Parent form to request OTP for password reset"""
+    email = forms.EmailField(required=True, label='Registered Email')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'form-control'})
+
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        if not Profile.objects.filter(user__email=email, role=Profile.ROLE_PARENT).exists():
+            raise forms.ValidationError('No parent account found with this email.')
+        return email
+
+
+class ParentOTPVerifyForm(forms.Form):
+    """Parent form to verify OTP and reset password"""
+    otp = forms.CharField(max_length=6, min_length=6, label='6-Digit OTP')
+    password1 = forms.CharField(widget=forms.PasswordInput, label='New Password')
+    password2 = forms.CharField(widget=forms.PasswordInput, label='Confirm Password')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'form-control'})
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get('password1')
+        password2 = cleaned_data.get('password2')
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError('Passwords do not match.')
+        return cleaned_data

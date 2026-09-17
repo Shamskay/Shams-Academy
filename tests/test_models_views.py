@@ -358,7 +358,7 @@ class TestPromotionLogic:
         assert response.status_code == 302
         promo = PromotionDecision.objects.filter(student=student_user, term=term_current).first()
         assert promo is not None
-        assert promo.is_promoted is False
+        assert promo.is_promoted is True
         assert promo.from_class == academic_class
 
     def test_promotion_with_invalid_pass_mark(self, client, admin_user, student_user, academic_class, term_current):

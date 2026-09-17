@@ -1,14 +1,25 @@
 from django.contrib.auth import login
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.db import IntegrityError, transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import DetailView
+from django.utils import timezone
+from datetime import timedelta
 import uuid
+import random
+import string
 
-from .forms import StudentSignupForm, StudentActivationTokenForm, StudentActivationForm, ProfileUpdateForm, StaffRegistrationForm, ParentRegistrationForm
+from .forms import (
+    StudentSignupForm, StudentActivationTokenForm, StudentActivationForm, 
+    ProfileUpdateForm, StaffRegistrationForm, ParentRegistrationForm,
+    StudentPasswordResetTokenForm, StudentPasswordResetForm,
+    ParentOTPRequestForm, ParentOTPVerifyForm
+)
 from .models import Profile
+from school.models import AcademicClass
+from school.utils import create_audit_log
 from .backends import MatricOrUniqueIDBackend
 
 
@@ -213,3 +224,216 @@ class ProfileDetailView(LoginRequiredMixin, DetailView):
         except Profile.DoesNotExist:
             Profile.objects.get_or_create(user=self.request.user)
             return self.request.user.profile
+
+
+# =============================================================================
+# Student Password Reset (Admin Token)
+# =============================================================================
+
+@user_passes_test(lambda u: u.is_superuser)
+def admin_generate_student_reset_token(request):
+    """Admin generates password reset token for a student"""
+    class_id = request.GET.get('class_id') or request.POST.get('class_id')
+    selected_class = None
+    generated_token = None
+    generated_for = None
+    
+    if class_id:
+        try:
+            selected_class = AcademicClass.objects.get(pk=class_id)
+        except AcademicClass.DoesNotExist:
+            selected_class = None
+    
+    classes = AcademicClass.objects.filter(is_active=True).order_by('name')
+    
+    if class_id:
+        students = Profile.objects.filter(
+            role=Profile.ROLE_STUDENT,
+            academic_class_id=class_id
+        ).select_related('user', 'academic_class').order_by('user__username')
+    else:
+        students = Profile.objects.none()
+    
+    if request.method == 'POST':
+        student_id = request.POST.get('student_id')
+        if student_id:
+            try:
+                profile = Profile.objects.get(
+                    pk=student_id, role=Profile.ROLE_STUDENT,
+                    academic_class_id=class_id
+                )
+                token = ''.join(random.choices(string.digits, k=6))
+                profile.password_reset_token = token
+                profile.password_reset_token_created_at = timezone.now()
+                profile.save(update_fields=['password_reset_token', 'password_reset_token_created_at'])
+                generated_token = token
+                generated_for = f'{profile.user.get_full_name() or profile.user.username} ({profile.admission_number})'
+                messages.success(request, f'Reset token generated for {generated_for}.')
+                create_audit_log(
+                    user=request.user, action='create',
+                    model_name='Profile', obj=profile, request=request,
+                    changes={'action': 'password_reset_token_generated', 'token': token}
+                )
+            except Profile.DoesNotExist:
+                messages.error(request, 'Student not found.')
+        else:
+            messages.error(request, 'Please select a student.')
+    
+    return render(request, 'accounts/admin_generate_reset_token.html', {
+        'classes': classes,
+        'students': students,
+        'selected_class': selected_class,
+        'generated_token': generated_token,
+        'generated_for': generated_for,
+    })
+
+
+def student_password_reset_token(request):
+    """Student enters admin-provided reset token"""
+    if request.method == 'POST':
+        form = StudentPasswordResetTokenForm(request.POST)
+        if form.is_valid():
+            token = form.cleaned_data['token']
+            try:
+                profile = Profile.objects.get(password_reset_token=token, role=Profile.ROLE_STUDENT)
+                if profile.password_reset_token_created_at and timezone.now() - profile.password_reset_token_created_at > timedelta(minutes=10):
+                    messages.error(request, 'This reset token has expired. Please ask the admin to generate a new one.')
+                    return redirect('accounts:student_password_reset_token')
+                request.session['student_reset_token'] = token
+                messages.success(request, 'Token validated. Please set your new password.')
+                return redirect('accounts:student_password_reset')
+            except Profile.DoesNotExist:
+                messages.error(request, 'Invalid or expired reset token.')
+    else:
+        form = StudentPasswordResetTokenForm()
+    return render(request, 'accounts/student_password_reset_token.html', {'form': form})
+
+
+def student_password_reset(request):
+    """Student sets new password after token validation"""
+    token = request.session.get('student_reset_token')
+    if not token:
+        messages.error(request, 'Please enter your reset token first.')
+        return redirect('accounts:student_password_reset_token')
+    
+    try:
+        profile = Profile.objects.get(password_reset_token=token, role=Profile.ROLE_STUDENT)
+        if profile.password_reset_token_created_at and timezone.now() - profile.password_reset_token_created_at > timedelta(minutes=10):
+            messages.error(request, 'This reset token has expired. Please ask the admin to generate a new one.')
+            return redirect('accounts:student_password_reset_token')
+    except Profile.DoesNotExist:
+        messages.error(request, 'Invalid or expired reset token.')
+        return redirect('accounts:student_password_reset_token')
+    
+    if request.method == 'POST':
+        form = StudentPasswordResetForm(request.POST)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    user = profile.user
+                    user.set_password(form.cleaned_data['password1'])
+                    user.save()
+                    
+                    profile.password_reset_token = None
+                    profile.save(update_fields=['password_reset_token'])
+                    
+                    request.session.pop('student_reset_token', None)
+                    messages.success(request, 'Password reset successfully. You can now log in.')
+                    return redirect('accounts:login')
+            except IntegrityError:
+                messages.error(request, 'An error occurred while resetting your password.')
+    else:
+        form = StudentPasswordResetForm()
+    
+    return render(request, 'accounts/student_password_reset.html', {'form': form, 'student': profile.user})
+
+
+# =============================================================================
+# Parent Password Reset (OTP via Email)
+# =============================================================================
+
+def parent_password_reset_request(request):
+    """Parent requests OTP for password reset"""
+    if request.method == 'POST':
+        form = ParentOTPRequestForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            try:
+                profile = Profile.objects.get(user__email=email, role=Profile.ROLE_PARENT)
+                # Generate 6-digit OTP
+                otp = ''.join(random.choices(string.digits, k=6))
+                profile.otp_code = otp
+                profile.otp_created_at = timezone.now()
+                profile.save(update_fields=['otp_code', 'otp_created_at'])
+                
+                # Send OTP via email
+                from django.core.mail import send_mail
+                from django.core.exceptions import SuspiciousOperation
+                from django.conf import settings
+                
+                try:
+                    send_mail(
+                        'Password Reset OTP - Shamskay Academy',
+                        f'Your OTP for password reset is: {otp}\nThis OTP expires in 10 minutes.',
+                        settings.DEFAULT_FROM_EMAIL,
+                        [email],
+                        fail_silently=False,
+                    )
+                    request.session['parent_reset_email'] = email
+                    messages.success(request, 'OTP sent to your registered email address.')
+                    return redirect('accounts:parent_password_reset_verify')
+                except Exception as e:
+                    profile.otp_code = None
+                    profile.save(update_fields=['otp_code'])
+                    messages.error(request, 'Failed to send OTP email. Please contact the admin or try again later.')
+            except Profile.DoesNotExist:
+                messages.error(request, 'No parent account found with this email.')
+    else:
+        form = ParentOTPRequestForm()
+    return render(request, 'accounts/parent_password_reset_request.html', {'form': form})
+
+
+def parent_password_reset_verify(request):
+    """Parent verifies OTP and sets new password"""
+    email = request.session.get('parent_reset_email')
+    if not email:
+        messages.error(request, 'Please request an OTP first.')
+        return redirect('accounts:parent_password_reset_request')
+    
+    try:
+        profile = Profile.objects.get(user__email=email, role=Profile.ROLE_PARENT)
+    except Profile.DoesNotExist:
+        messages.error(request, 'Invalid session. Please request a new OTP.')
+        return redirect('accounts:parent_password_reset_request')
+    
+    # Check OTP expiry (10 minutes)
+    if profile.otp_created_at and (timezone.now() - profile.otp_created_at).total_seconds() > 600:
+        messages.error(request, 'OTP has expired. Please request a new one.')
+        return redirect('accounts:parent_password_reset_request')
+    
+    if request.method == 'POST':
+        form = ParentOTPVerifyForm(request.POST)
+        if form.is_valid():
+            otp = form.cleaned_data['otp']
+            if profile.otp_code != otp:
+                messages.error(request, 'Invalid OTP. Please try again.')
+            else:
+                try:
+                    with transaction.atomic():
+                        user = profile.user
+                        user.set_password(form.cleaned_data['password1'])
+                        user.save()
+                        
+                        profile.otp_code = None
+                        profile.otp_created_at = None
+                        profile.save(update_fields=['otp_code', 'otp_created_at'])
+                        
+                        request.session.pop('parent_reset_email', None)
+                        messages.success(request, 'Password reset successfully. You can now log in.')
+                        return redirect('accounts:login')
+                except IntegrityError:
+                    messages.error(request, 'An error occurred while resetting your password.')
+    else:
+        form = ParentOTPVerifyForm()
+    
+    return render(request, 'accounts/parent_password_reset_verify.html', {'form': form})

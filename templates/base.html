@@ -18,8 +18,10 @@
         {% if user.is_authenticated %}
             {% if user.is_superuser %}
                 {% url 'school:admin_dashboard' as dashboard_url %}
-            {% elif user.profile.role == 'staff' %}
+            {% elif user_profile and user_profile.role == 'staff' %}
                 {% url 'staff:staff_dashboard' as dashboard_url %}
+            {% elif user_profile and user_profile.role == 'parent' %}
+                {% url 'school:parent_dashboard' as dashboard_url %}
             {% else %}
                 {% url 'students:student_dashboard' as dashboard_url %}
             {% endif %}
@@ -81,7 +83,7 @@
                             </ul>
                         </li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'school:admin_audit_logs' %}">Audit Logs</a></li>
-                    {% elif user.profile.role == 'staff' %}
+                    {% elif user_profile and user_profile.role == 'staff' %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="staffTeachingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Teaching</a>
                             <ul class="dropdown-menu">
@@ -100,7 +102,7 @@
                                 <li><a class="dropdown-item" href="{% url 'students:staff_subject_students' %}">Subject Students</a></li>
                             </ul>
                         </li>
-                        {% if user.profile.is_class_teacher %}
+                        {% if user_profile and user_profile.is_class_teacher %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="staffStudentsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Students</a>
                             <ul class="dropdown-menu">
@@ -108,12 +110,12 @@
                             </ul>
                         </li>
                         {% endif %}
-                    {% elif user.profile.role == 'student' %}
+                    {% elif user_profile and user_profile.role == 'student' %}
                         <li class="nav-item"><a class="nav-link" href="{% url 'students:student_subjects' %}">My Subjects</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'students:my_results' %}">Results</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'students:term_results' %}">Term Results</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'school:report_card' %}">Report Card</a></li>
-                    {% elif user.profile.role == 'parent' %}
+                    {% elif user_profile and user_profile.role == 'parent' %}
                         <li class="nav-item"><a class="nav-link" href="{% url 'school:parent_dashboard' %}">My Children</a></li>
                     {% endif %}
                 {% endif %}
@@ -123,21 +125,21 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown"
                            role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            {% if user.profile.avatar %}
-                                <img src="{{ user.profile.avatar.url }}" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                            {% if user_profile and user_profile.avatar %}
+                                <img src="{{ user_profile.avatar.url }}" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
                             {% else %}
                                 <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
                             {% endif %}
                             <span>{{ user.first_name|default:user.username }}</span>
                             {% if user.is_superuser %}
                                 <span class="badge bg-danger ms-1">admin</span>
-                            {% elif user.profile.role == 'student' and user.profile.admission_number %}
-                                <span class="badge bg-primary ms-1">{{ user.profile.admission_number }}</span>
+                            {% elif user_profile and user_profile.role == 'student' and user_profile.admission_number %}
+                                <span class="badge bg-primary ms-1">{{ user_profile.admission_number }}</span>
                             {% endif %}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">Profile</a></li>
-                            {% if user.profile.role == 'student' %}
+                            {% if user_profile and user_profile.role == 'student' %}
                                 <li><a class="dropdown-item" href="{% url 'students:my_results' %}">My Results</a></li>
                             {% endif %}
                             <li><a class="dropdown-item" href="{% url 'accounts:password_change' %}">Change Password</a></li>

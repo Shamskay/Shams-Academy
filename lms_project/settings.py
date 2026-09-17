@@ -2,34 +2,38 @@
 Django settings for lms_project project.
 """
 from datetime import timedelta
+import os
+from dotenv import load_dotenv
 from pathlib import Path
-from decouple import config
-import dj_database_url
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = config('SECRET_KEY')
+# SECRET_KEY = 'django-insecure-044#_p(2po48t2bzq4_3ki3ez&g@e!%tnl)1+3=#0lpninal1_'
+
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # DATABASES = {
 #     'default': dj_database_url.config()
 # }
 
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    ".vercel.app"
-]
-# ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = [
+#     "127.0.0.1",
+#     "localhost",
+#     ".vercel.app"
+# ]
+ALLOWED_HOSTS = ['*']
 
 SCHOOL_INITIALS = 'SA'
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://127.0.0.1:8000",
-    "http://localhost:8000",
-    "https://shams-store-ten.vercel.app",
-]
+# CSRF_TRUSTED_ORIGINS = [
+#     "http://127.0.0.1:8000",
+#     "http://localhost:8000",
+#     "https://shams-store-ten.vercel.app",
+# ]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -45,7 +49,7 @@ INSTALLED_APPS = [
     'students',
     'staff',
     'assessments',
-    "corsheaders",
+    # "corsheaders",
 ]
 
 MIDDLEWARE = [
@@ -74,6 +78,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'school.utils.user_profile_context',
             ],
         },
     },
@@ -81,27 +86,27 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'lms_project.wsgi.application'
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'lms_db',
-#         'HOST': '127.0.0.1',
-#         'USER': 'root',
-#         'PASSWORD': '',
-#         'PORT': '3306',
-#         'OPTIONS': {
-#             'autocommit': True,
-#         },
-#     }
-# }
-
 DATABASES = {
-            "default": dj_database_url.parse(
-                config( 'DATABASE_URL'),
-                conn_max_age=600,
-                ssl_require=True,
-            ),
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'lms_db',
+        'HOST': '127.0.0.1',
+        'USER': 'root',
+        'PASSWORD': '',
+        'PORT': '3306',
+        'OPTIONS': {
+            'autocommit': True,
+        },
+    }
 }
+
+# DATABASES = {
+#             "default": dj_database_url.parse(
+#                 config( 'DATABASE_URL'),
+#                 conn_max_age=600,
+#                 ssl_require=True,
+#             ),
+# }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -133,5 +138,11 @@ LOGIN_REDIRECT_URL = 'school:dashboard'
 LOGOUT_REDIRECT_URL = 'school:home'
 LOGIN_URL = 'school:login'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'noreply@shamskayacademy.com'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
+EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'False').lower() in ('true', '1', 'yes')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)

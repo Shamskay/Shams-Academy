@@ -33,6 +33,8 @@ def take_test(request, test_id):
     if not profile:
         messages.error(request, 'Profile not found. Please contact the admin.')
         return redirect('school:dashboard')
+    if profile.role == Profile.ROLE_PARENT:
+        return redirect('school:parent_dashboard')
     if profile.role == Profile.ROLE_STAFF or request.user.is_superuser:
         return redirect('school:dashboard')
     if profile.status != Profile.STATUS_ACTIVE:
@@ -102,6 +104,8 @@ def take_exam(request, exam_id):
     if not profile:
         messages.error(request, 'Profile not found. Please contact the admin.')
         return redirect('school:dashboard')
+    if profile.role == Profile.ROLE_PARENT:
+        return redirect('school:parent_dashboard')
     if profile.role == Profile.ROLE_STAFF or request.user.is_superuser:
         return redirect('school:dashboard')
     if profile.status != Profile.STATUS_ACTIVE:
@@ -171,6 +175,8 @@ def student_dashboard(request):
     if not profile:
         messages.error(request, 'Profile not found. Please contact the admin.')
         return redirect('school:dashboard')
+    if profile.role == Profile.ROLE_PARENT:
+        return redirect('school:parent_dashboard')
     if profile.role != Profile.ROLE_STAFF and not request.user.is_superuser:
         if profile.status != Profile.STATUS_ACTIVE:
             messages.info(request, f'Your account status is {profile.get_status_display()}. You can view past results but cannot take new assessments.')
@@ -221,6 +227,8 @@ def student_subjects(request):
     if not profile:
         messages.error(request, 'Profile not found. Please contact the admin.')
         return redirect('school:dashboard')
+    if profile.role == Profile.ROLE_PARENT:
+        return redirect('school:parent_dashboard')
     if profile.role == Profile.ROLE_STAFF or request.user.is_superuser:
         return redirect('school:dashboard')
     if profile.status != Profile.STATUS_ACTIVE:
@@ -267,6 +275,8 @@ def my_results(request):
     if not profile:
         messages.error(request, 'Profile not found. Please contact the admin.')
         return redirect('school:dashboard')
+    if profile.role == Profile.ROLE_PARENT:
+        return redirect('school:parent_dashboard')
     if profile.role == Profile.ROLE_STAFF or request.user.is_superuser:
         return redirect('school:dashboard')
 
@@ -278,13 +288,9 @@ def my_results(request):
         student=request.user
     ).select_related('exam', 'exam__subject', 'exam__term', 'exam__academic_class').order_by('-submitted_at')
 
-    boundaries = get_grade_boundaries()
-    annotated_tests = annotate_results(test_results, 'score', boundaries)
-    annotated_exams = annotate_results(exam_results, 'score', boundaries)
-
     context = {
-        'test_results': annotated_tests,
-        'exam_results': annotated_exams,
+        'test_results': test_results,
+        'exam_results': exam_results,
     }
     return render(request, 'students/my_results.html', context)
 
@@ -295,6 +301,8 @@ def term_results(request):
     if not profile:
         messages.error(request, 'Profile not found. Please contact the admin.')
         return redirect('school:dashboard')
+    if profile.role == Profile.ROLE_PARENT:
+        return redirect('school:parent_dashboard')
     if profile.role == Profile.ROLE_STAFF or request.user.is_superuser:
         return redirect('school:dashboard')
 
@@ -322,6 +330,8 @@ def download_term_results_pdf(request):
     if not profile:
         messages.error(request, 'Profile not found. Please contact the admin.')
         return redirect('school:dashboard')
+    if profile.role == Profile.ROLE_PARENT:
+        return redirect('school:parent_dashboard')
     if profile.role == Profile.ROLE_STAFF or request.user.is_superuser:
         return redirect('school:dashboard')
 
@@ -463,10 +473,6 @@ def admin_student_results(request, pk):
         student=student.user
     ).select_related('exam', 'exam__subject', 'exam__term', 'exam__academic_class').order_by('-submitted_at')
 
-    boundaries = get_grade_boundaries()
-    annotated_tests = annotate_results(test_results, 'score', boundaries)
-    annotated_exams = annotate_results(exam_results, 'score', boundaries)
-
     term_results = TermResult.objects.filter(
         student=student.user
     ).select_related('term', 'academic_class').order_by('-term')
@@ -474,8 +480,8 @@ def admin_student_results(request, pk):
 
     context = {
         'student': student,
-        'test_results': annotated_tests,
-        'exam_results': annotated_exams,
+        'test_results': test_results,
+        'exam_results': exam_results,
         'term_results': annotated_term_results,
     }
     return render(request, 'students/admin_student_results.html', context)
@@ -720,9 +726,6 @@ def staff_student_results(request, class_pk, student_pk):
         exam__academic_class=academic_class
     ).select_related('exam', 'exam__subject', 'exam__term').order_by('-submitted_at')
 
-    annotated_tests = annotate_results(test_results, 'score', boundaries)
-    annotated_exams = annotate_results(exam_results, 'score', boundaries)
-
     term_results = TermResult.objects.filter(
         student=student.user,
         academic_class=academic_class
@@ -733,8 +736,8 @@ def staff_student_results(request, class_pk, student_pk):
         'academic_class': academic_class,
         'student': student,
         'subject_data': subject_data,
-        'test_results': annotated_tests,
-        'exam_results': annotated_exams,
+        'test_results': test_results,
+        'exam_results': exam_results,
         'term_results': annotated_term_results,
     }
     return render(request, 'students/staff_student_results.html', context)
