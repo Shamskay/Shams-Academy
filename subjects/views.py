@@ -203,5 +203,6 @@ def admin_toggle_class_subject(request, pk):
     class_subject.is_active = not class_subject.is_active
     class_subject.save()
     status = 'activated' if class_subject.is_active else 'deactivated'
-    messages.success(request, f'{class_subject.teacher.get_full_name() or class_subject.teacher.username} {status} as teacher for {class_subject}.')
+    teacher_name = class_subject.teacher.get_full_name() or class_subject.teacher.username if class_subject.teacher else 'No teacher'
+    messages.success(request, f'{teacher_name} {status} as teacher for {class_subject}.')
     return redirect('subjects:admin_class_subjects')

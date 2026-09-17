@@ -67,7 +67,7 @@
                             <tr>
                                 <td>{{ cs.academic_class.name }}</td>
                                 <td>{{ cs.subject.name }} ({{ cs.subject.code }})</td>
-                                <td>{{ cs.teacher.get_full_name|default:cs.teacher.username|default:"-" }}</td>
+                                <td>{% if cs.teacher %}{{ cs.teacher.get_full_name|default:cs.teacher.username }}{% else %}-{% endif %}</td>
                                 <td>
                                     {% if cs.is_active %}
                                         <span class="badge bg-success">Active</span>
@@ -99,7 +99,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Are you sure you want to {% if cs.is_active %}deactivate{% else %}activate{% endif %} <strong>{{ cs.teacher.get_full_name|default:cs.teacher.username|default:'-' }}</strong> for <strong>{{ cs.academic_class.name }} - {{ cs.subject.name }}</strong>?
+                Are you sure you want to {% if cs.is_active %}deactivate{% else %}activate{% endif %} <strong>{% if cs.teacher %}{{ cs.teacher.get_full_name|default:cs.teacher.username }}{% else %}-{% endif %}</strong> for <strong>{{ cs.academic_class.name }} - {{ cs.subject.name }}</strong>?
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

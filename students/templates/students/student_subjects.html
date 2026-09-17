@@ -44,7 +44,7 @@
                         <h5>{{ cs.subject.name }}</h5>
                         <span class="subject-code">{{ cs.subject.code }}</span>
                         <div class="mt-2">
-                            <span class="badge bg-primary">Teacher: {{ cs.teacher.get_full_name|default:cs.teacher.username }}</span>
+                            <span class="badge bg-primary">Teacher: {% if cs.teacher %}{{ cs.teacher.get_full_name|default:cs.teacher.username }}{% else %}Unassigned{% endif %}</span>
                         </div>
                     </a>
                 </div>
