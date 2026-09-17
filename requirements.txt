@@ -395,7 +395,7 @@ zstandard==0.19.0
 # atomicwrites==1.4.0
 # backports.weakref==1.0.post1
 # charset-normalizer==3.5.1
-# clyent==1.2.2
+clyent==1.2.2
 # colorama==0.4.6
 # comtypes==1.4.16
 # conda-repo-cli==1.0.75
