@@ -5,33 +5,33 @@ from datetime import timedelta
 import os
 from dotenv import load_dotenv
 from pathlib import Path
-from decouple import config
-import dj_database_url
+# from decouple import config
+# import dj_database_url
 
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = config('SECRET_KEY')
-# SECRET_KEY = os.environ.get('SECRET_KEY')
+# SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    ".vercel.app"
-]
+# ALLOWED_HOSTS = [
+#     "127.0.0.1",
+#     "localhost",
+#     ".vercel.app"
+# ]
 
-# ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*']
 
 SCHOOL_INITIALS = 'SA'
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://127.0.0.1:8000",
-    "http://localhost:8000",
-    # "https://shams-store-ten.vercel.app",
-]
+# CSRF_TRUSTED_ORIGINS = [
+#     "http://127.0.0.1:8000",
+#     "http://localhost:8000",
+#     # "https://shams-store-ten.vercel.app",
+# ]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'students',
     'staff',
     'assessments',
-    "corsheaders",
+    # "corsheaders",
 ]
 
 MIDDLEWARE = [
@@ -84,27 +84,27 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'lms_project.wsgi.application'
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'lms_db',
-#         'HOST': '127.0.0.1',
-#         'USER': 'root',
-#         'PASSWORD': '',
-#         'PORT': '3306',
-#         'OPTIONS': {
-#             'autocommit': True,
-#         },
-#     }
-# }
-
 DATABASES = {
-            "default": dj_database_url.parse(
-                config( 'DATABASE_URL'),
-                conn_max_age=600,
-                ssl_require=True,
-            ),
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'lms_db',
+        'HOST': '127.0.0.1',
+        'USER': 'root',
+        'PASSWORD': '',
+        'PORT': '3306',
+        'OPTIONS': {
+            'autocommit': True,
+        },
+    }
 }
+
+# DATABASES = {
+#             "default": dj_database_url.parse(
+#                 config( 'DATABASE_URL'),
+#                 conn_max_age=600,
+#                 ssl_require=True,
+#             ),
+# }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
