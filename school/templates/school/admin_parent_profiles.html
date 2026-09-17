@@ -88,7 +88,7 @@
                                     <div>
                                         <h6 class="mb-0 fw-bold">{{ parent_data.user.get_full_name|default:parent_data.user.username }}</h6>
                                         <div class="d-flex align-items-center gap-2 text-muted small">
-                                            <span class="badge bg-primary"><i class="bi bi-key me-1"></i>{{ parent_data.user.profile.unique_id|default:"No code" }}</span>
+                                            <span class="badge bg-primary"><i class="bi bi-key me-1"></i>{{ parent_data.profile.unique_id|default:"No code" }}</span>
                                             <span class="badge bg-secondary">{{ parent_data.links|length }} child{{ parent_data.links|length|pluralize }}</span>
                                         </div>
                                     </div>

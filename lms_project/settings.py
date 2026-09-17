@@ -30,7 +30,7 @@ SCHOOL_INITIALS = 'SA'
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:8000",
-    # "https://shams-store-ten.vercel.app",
+    "https://shams-academy-mu.vercel.app",
 ]
 
 INSTALLED_APPS = [
@@ -66,7 +66,7 @@ STORAGES = {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage" if DEBUG else "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
 
@@ -108,12 +108,13 @@ WSGI_APPLICATION = 'lms_project.wsgi.application'
 #     }
 # }
 
+_db_url = config('DATABASE_URL')
 DATABASES = {
-            "default": dj_database_url.parse(
-                config( 'DATABASE_URL'),
-                conn_max_age=600,
-                ssl_require=True,
-            ),
+    "default": dj_database_url.parse(
+        _db_url,
+        conn_max_age=600,
+        ssl_require=_db_url.startswith('postgres'),
+    ),
 }
 
 AUTH_PASSWORD_VALIDATORS = [

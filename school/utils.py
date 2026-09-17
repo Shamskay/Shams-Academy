@@ -1,4 +1,3 @@
-from django.db import transaction
 from accounts.models import Profile
 from school.models import AuditLog, GradeBoundary
 

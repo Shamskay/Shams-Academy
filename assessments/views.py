@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from staff.decorators import staff_required
 from accounts.models import Profile
-from school.models import Test, Exam, Term, Subject, AcademicClass, ClassSubject, Question, Option, TestResult, ExamResult, TermResult, PromotionDecision, GradeBoundary
+from school.models import Test, Exam, Term, Subject, AcademicClass, ClassSubject, Question, Option, TestResult, ExamResult, TermResult, PromotionDecision
 from school.forms import TeacherTestForm, TeacherExamForm, TestResultForm, ExamResultForm
 from school.utils import get_user_profile, create_audit_log
 from django.db import transaction, IntegrityError
