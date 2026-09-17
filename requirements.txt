@@ -1,5 +1,5 @@
 Django==5.2
-# mysqlclient==2.2.8
+mysqlclient==2.2.8
 dj-database-url==3.1.2
 django-cors-headers==4.9.0
 reportlab==5.0.1
@@ -9,3 +9,6 @@ whitenoise==6.7.0
 pytest==9.1.1
 pytest-django==4.14.0
 python-dotenv>=1.0.0
+python-decouple
+psycopg==3.3.5
+psycopg-binary==3.3.5
