@@ -36,7 +36,7 @@
                 <tbody>
                     {% for log in logs %}
                     <tr>
-                        <td>{{ log.user.get_full_name|default:log.user.username|default:"System" }}</td>
+                        <td>{% if log.user %}{{ log.user.get_full_name|default:log.user.username }}{% else %}System{% endif %}</td>
                         <td>
                             {% if log.action == 'create' %}
                                 <span class="badge bg-success">Created</span>

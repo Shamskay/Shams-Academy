@@ -74,8 +74,16 @@ class Profile(models.Model):
             self.admission_number = f"ADM-{initials}/{code}/{year}"
             super().save(update_fields=['admission_number'])
         
+        # Auto-generate activation token for students
+        if self.role == self.ROLE_STUDENT and not self.activation_token:
+            token = str(random.randint(10000, 99999))
+            while Profile.objects.filter(activation_token=token).exists():
+                token = str(random.randint(10000, 99999))
+            self.activation_token = token
+            super().save(update_fields=['activation_token'])
+        
         # Auto-generate unique_id for staff
-        elif self.role == self.ROLE_STAFF and not self.unique_id:
+        if self.role == self.ROLE_STAFF and not self.unique_id:
             from django.utils import timezone
             year = timezone.now().strftime('%Y')
             code = ''.join(random.choices(string.digits, k=3))
@@ -83,7 +91,7 @@ class Profile(models.Model):
             super().save(update_fields=['unique_id'])
         
         # Clear admission_number for non-students
-        elif self.role != self.ROLE_STUDENT and self.admission_number:
+        if self.role != self.ROLE_STUDENT and self.admission_number:
             self.admission_number = None
             super().save(update_fields=['admission_number'])
 

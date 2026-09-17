@@ -621,8 +621,11 @@ def parent_dashboard(request):
     children = []
     for link in parent_links:
         student = link.student
-        student_profile = student.profile
-        academic_class = student_profile.academic_class
+        try:
+            student_profile = student.profile
+        except Profile.DoesNotExist:
+            student_profile = None
+        academic_class = student_profile.academic_class if student_profile else None
         
         current_term = Term.objects.filter(is_current=True).first()
         term_results = []
@@ -647,7 +650,7 @@ def parent_dashboard(request):
         children.append({
             'student': student,
             'profile': student_profile,
-            'status': student_profile.get_status_display(),
+            'status': student_profile.get_status_display() if student_profile else 'Unknown',
             'academic_class': academic_class,
             'relationship': link.get_relationship_display(),
             'term_results': term_results,
@@ -675,8 +678,11 @@ def parent_child_detail(request, student_id):
     
     parent_link = get_object_or_404(ParentProfile, parent=request.user, student_id=student_id)
     student = parent_link.student
-    student_profile = student.profile
-    academic_class = student_profile.academic_class
+    try:
+        student_profile = student.profile
+    except Profile.DoesNotExist:
+        student_profile = None
+    academic_class = student_profile.academic_class if student_profile else None
     
     current_term = Term.objects.filter(is_current=True).first()
     
@@ -702,7 +708,7 @@ def parent_child_detail(request, student_id):
     context = {
         'student': student,
         'profile': student_profile,
-        'status': student_profile.get_status_display(),
+        'status': student_profile.get_status_display() if student_profile else 'Unknown',
         'academic_class': academic_class,
         'relationship': parent_link.get_relationship_display(),
         'current_term': current_term,

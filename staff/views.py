@@ -69,22 +69,22 @@ def admin_create_staff(request):
     if request.method == 'POST':
         form = AdminCreateStaffForm(request.POST)
         if form.is_valid():
-            unique_id = form.cleaned_data['unique_id']
+            unique_id = form.cleaned_data.get('unique_id', '').strip()
             first_name = form.cleaned_data.get('first_name', '')
             last_name = form.cleaned_data.get('last_name', '')
             email = form.cleaned_data.get('email', '')
             phone = form.cleaned_data.get('phone', '')
             gender = form.cleaned_data.get('gender', '')
 
-            if Profile.objects.filter(unique_id=unique_id).exists():
+            if unique_id and Profile.objects.filter(unique_id=unique_id).exists():
                 messages.error(request, 'Unique ID already exists.')
-            elif User.objects.filter(username=unique_id).exists():
+            elif unique_id and User.objects.filter(username=unique_id).exists():
                 messages.error(request, 'A user with this Unique ID already exists.')
             else:
                 try:
                     with transaction.atomic():
                         user = User.objects.create_user(
-                            username=unique_id,
+                            username=f'staff_{User.objects.count() + 1}',
                             password=None,
                             first_name=first_name,
                             last_name=last_name,
@@ -92,13 +92,15 @@ def admin_create_staff(request):
                         )
                         user.set_unusable_password()
                         user.save()
-                        Profile.objects.filter(user=user).update(
-                            role=Profile.ROLE_STAFF,
-                            unique_id=unique_id,
-                            phone=phone,
-                            gender=gender
-                        )
-                        messages.success(request, f'Staff created with Unique ID: {unique_id}. They can now register using this ID.')
+                        profile = Profile.objects.get(user=user)
+                        profile.role = Profile.ROLE_STAFF
+                        if unique_id:
+                            profile.unique_id = unique_id
+                        profile.phone = phone
+                        profile.gender = gender
+                        profile.save()
+                        auto_uid = profile.unique_id
+                        messages.success(request, f'Staff created with Unique ID: {auto_uid}. They can now register using this ID.')
                         return redirect('school:admin_dashboard')
                 except IntegrityError:
                     messages.error(request, 'An error occurred while creating the staff. Please try again.')

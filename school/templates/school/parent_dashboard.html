@@ -34,7 +34,7 @@
             <div class="row g-3">
                 <div class="col-md-3">
                     <p class="mb-1"><strong>Class:</strong> {{ child.academic_class.name|default:"N/A" }}</p>
-                    <p class="mb-1"><strong>Admission No:</strong> {{ child.profile.admission_number|default:"N/A" }}</p>
+                    <p class="mb-1"><strong>Admission No:</strong> {% if child.profile %}{{ child.profile.admission_number|default:"N/A" }}{% else %}N/A{% endif %}</p>
                 </div>
                 <div class="col-md-3">
                     <p class="mb-1"><strong>Tests Taken:</strong> {{ child.test_count }}</p>

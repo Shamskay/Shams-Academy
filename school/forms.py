@@ -434,7 +434,7 @@ class StaffCreateForm(forms.Form):
 
 
 class AdminCreateStaffForm(forms.Form):
-    unique_id = forms.CharField(max_length=50, help_text='Admin-given Unique ID for staff to use during registration')
+    unique_id = forms.CharField(max_length=50, required=False, help_text='Optional - leave blank to auto-generate (STF/XXX/YYYY)')
     first_name = forms.CharField(max_length=30, required=False)
     last_name = forms.CharField(max_length=30, required=False)
     email = forms.EmailField(required=False)
