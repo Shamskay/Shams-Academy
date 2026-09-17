@@ -49,7 +49,18 @@
                     </div>
                 </form>
             </div>
+</div>
+
+{% if activation_token %}
+<div class="row mt-4">
+    <div class="col-lg-8 mx-auto">
+        <div class="alert alert-success">
+            <h5 class="alert-heading mb-3">Student Created Successfully!</h5>
+            <p class="mb-1"><strong>Admission Number:</strong> {{ activation_matric|default:"N/A" }}</p>
+            <p class="mb-1"><strong>Activation Token:</strong> <span class="fs-4 fw-bold">{{ activation_token }}</span></p>
+            <p class="mb-2">Share this 5-digit token with the student so they can activate their account.</p>
         </div>
     </div>
 </div>
+{% endif %}
 {% endblock %}

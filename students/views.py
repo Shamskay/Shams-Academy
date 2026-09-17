@@ -476,6 +476,7 @@ def admin_student_results(request, pk):
     term_results = TermResult.objects.filter(
         student=student.user
     ).select_related('term', 'academic_class').order_by('-term')
+    boundaries = get_grade_boundaries()
     annotated_term_results = annotate_results(term_results, 'average_score', boundaries)
 
     context = {

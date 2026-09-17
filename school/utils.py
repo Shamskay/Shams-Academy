@@ -11,13 +11,13 @@ def get_client_ip(request):
     return None
 
 
-def create_audit_log(user, action, model_name, obj, changes=None, request=None):
+def create_audit_log(user, action, model_name, obj=None, changes=None, request=None, object_id=None, object_repr=None):
     AuditLog.objects.create(
         user=user,
         action=action,
         model_name=model_name,
-        object_id=str(obj.pk),
-        object_repr=str(obj),
+        object_id=object_id if object_id is not None else (str(obj.pk) if obj else None),
+        object_repr=object_repr if object_repr is not None else (str(obj) if obj else None),
         changes=changes or {},
         ip_address=get_client_ip(request) if request else None,
     )

@@ -294,8 +294,8 @@ def term_results(request):
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def admin_create_student(request):
-    activation_token = request.session.pop('student_activation_token', None)
-    activation_matric = request.session.pop('student_activation_admission', None)
+    activation_token = request.session.get('student_activation_token')
+    activation_matric = request.session.get('student_activation_admission')
     
     if request.method == 'POST':
         form = AdminCreateStudentForm(request.POST)
