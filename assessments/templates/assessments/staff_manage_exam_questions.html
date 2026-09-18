@@ -130,6 +130,9 @@
                 <span class="question-count">
                     <strong>{{ questions.count }}</strong> question{{ questions.count|pluralize }} total
                 </span>
+                <a href="{% url 'assessments:staff_add_exam_question' assessment.pk %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>Add Question
+                </a>
             </div>
         </div>
     </div>
