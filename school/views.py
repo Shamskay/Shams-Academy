@@ -862,7 +862,7 @@ def report_card(request):
             })
 
         grade_boundary = None
-        if card.average_score:
+        if card.average_score is not None and float(card.average_score) >= 0:
             for boundary in boundaries:
                 if boundary.min_score <= float(card.average_score) <= boundary.max_score:
                     grade_boundary = boundary

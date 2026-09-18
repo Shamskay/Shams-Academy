@@ -41,11 +41,16 @@ def get_grade_boundaries():
 
 
 def annotate_grade(result_obj, score, boundaries=None):
+    if score is None:
+        return None
     if boundaries is None:
         boundaries = get_grade_boundaries()
     for boundary in boundaries:
-        if boundary.min_score <= score <= boundary.max_score:
-            return boundary
+        try:
+            if boundary.min_score <= score <= boundary.max_score:
+                return boundary
+        except TypeError:
+            continue
     return None
 
 
