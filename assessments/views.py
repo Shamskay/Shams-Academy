@@ -648,32 +648,37 @@ def staff_view_exam_results(request, pk):
 
 @login_required
 def admin_calculate_term_results(request):
-    """Calculate term results for all students."""
+    """Calculate term results for all students.
+
+    GET without params: use current term, calculate, redirect (backward compatible)
+    POST with term/class: calculate for selected term/class, redirect
+    """
     if not request.user.is_superuser:
         return redirect('school:dashboard')
-    
+
     from school.views import calculate_term_results
-    
-    # Accept GET parameters for testing
-    term_id = request.GET.get('term') or request.POST.get('term')
-    class_id = request.GET.get('class') or request.POST.get('class')
-    
-    # If no term specified, use current term
-    if not term_id:
-        current_term = Term.objects.filter(is_current=True).first()
-        if current_term:
-            term_id = current_term.pk
-    
+
+    term_id = request.GET.get('term') if request.method == 'GET' else request.POST.get('term')
+    class_id = request.GET.get('class') if request.method == 'GET' else request.POST.get('class')
+
     if term_id:
         term = get_object_or_404(Term, pk=term_id)
         academic_class = get_object_or_404(AcademicClass, pk=class_id) if class_id else None
-        
+
         count = calculate_term_results(term, academic_class)
         messages.success(request, f'Term results calculated for {count} students.')
-        return redirect('assessments:admin_calculate_term_results')
-    
-    # No term specified and no current term - redirect with error
-    messages.error(request, 'Please select a term or set a current term.')
+    else:
+        # If no term specified, use current term
+        current_term = Term.objects.filter(is_current=True).first()
+        if current_term:
+            term = current_term
+            academic_class = get_object_or_404(AcademicClass, pk=class_id) if class_id else None
+
+            count = calculate_term_results(term, academic_class)
+            messages.success(request, f'Term results calculated for {count} students.')
+        else:
+            messages.error(request, 'Please select a term or set a current term.')
+
     return redirect('assessments:admin_calculate_term_results')
 
 

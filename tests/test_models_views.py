@@ -303,8 +303,8 @@ class TestTermResultsCalculation:
             academic_class=academic_class
         ).first()
         assert term_result is not None
-        assert term_result.average_score == 11.0
-        assert term_result.total_subjects == 2
+        assert term_result.average_score == 22.0
+        assert term_result.total_subjects == 1
 
     def test_calculate_term_results_no_current_term(self, client, admin_user):
         client.login(username='admin', password='adminpass123')

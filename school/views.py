@@ -1260,16 +1260,16 @@ def calculate_term_results(term, academic_class=None):
     """
     from accounts.models import Profile
     from django.db.models import Avg, Count
-    
+
     # Get students with results in this term
     students_qs = User.objects.filter(
         profile__role=Profile.ROLE_STUDENT,
         test_results__test__term=term,
     ).distinct()
-    
+
     if academic_class:
         students_qs = students_qs.filter(profile__academic_class=academic_class)
-    
+
     count = 0
     for student in students_qs:
         # Get all test and exam results for this student in this term
@@ -1277,63 +1277,43 @@ def calculate_term_results(term, academic_class=None):
             student=student,
             test__term=term
         ).select_related('test__subject')
-        
+
         exam_results = ExamResult.objects.filter(
             student=student,
             exam__term=term
         ).select_related('exam__subject')
-        
-        # Calculate average per subject
+
+        # Collect scores per subject (a subject carries 100% marks)
         subject_scores = {}
-        
+
         for tr in test_results:
             subject = tr.test.subject
             if subject not in subject_scores:
-                subject_scores[subject] = {'test': [], 'exam': []}
-            subject_scores[subject]['test'].append(float(tr.score))
-        
+                subject_scores[subject] = 0.0
+            subject_scores[subject] += float(tr.score)
+
         for er in exam_results:
             subject = er.exam.subject
             if subject not in subject_scores:
-                subject_scores[subject] = {'test': [], 'exam': []}
-            subject_scores[subject]['exam'].append(float(er.score))
-        
-        # Calculate average per subject (simple average of all scores)
-        total_score = 0
-        subjects_count = 0
-        
-        for subject, scores in subject_scores.items():
-            test_avg = sum(scores['test']) / len(scores['test']) if scores['test'] else 0
-            exam_avg = sum(scores['exam']) / len(scores['exam']) if scores['exam'] else 0
-            
-            # Simple average of test and exam scores
-            if scores['test'] and scores['exam']:
-                subject_avg = (test_avg + exam_avg) / 2
-            elif scores['test']:
-                subject_avg = test_avg
-            elif scores['exam']:
-                subject_avg = exam_avg
-            else:
-                subject_avg = 0
-            
-            total_score += subject_avg
-            subjects_count += 1
-        
-        if subjects_count > 0:
-            average_score = round(total_score / subjects_count, 2)
-            
-            # Count total assessments (tests + exams) for total_subjects
+                subject_scores[subject] = 0.0
+            subject_scores[subject] += float(er.score)
+
+        # Average = sum of all scores per subject / total number of subjects
+        if subject_scores:
+            total_score = sum(subject_scores.values())
+            total_subjects = len(subject_scores)
+            average_score = round(total_score / total_subjects, 2)
             total_assessments = test_results.count() + exam_results.count()
-            
+
             TermResult.objects.update_or_create(
                 student=student,
                 term=term,
                 defaults={
                     'academic_class': student.profile.academic_class,
                     'average_score': average_score,
-                    'total_subjects': total_assessments,
+                    'total_subjects': total_subjects,
                 }
             )
             count += 1
-    
+
     return count
