@@ -456,7 +456,7 @@ class AdminCreateStaffForm(forms.Form):
 class AdminCreateParentForm(forms.Form):
     first_name = forms.CharField(max_length=30)
     last_name = forms.CharField(max_length=30)
-    email = forms.EmailField(required=False)
+    email = forms.EmailField(required=True)
     phone = forms.CharField(max_length=20, required=False)
     student = forms.ModelChoiceField(
         queryset=User.objects.filter(profile__role=Profile.ROLE_STUDENT, profile__status=Profile.STATUS_ACTIVE).select_related('profile', 'profile__academic_class'),

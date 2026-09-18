@@ -612,6 +612,7 @@ class TestAuditLogging:
         client.post(reverse('school:admin_create_parent') + f'?class_id={academic_class.pk}', {
             'first_name': 'Audit',
             'last_name': 'Parent',
+            'email': 'audit@test.com',
             'student_id': student_user.pk,
             'class_id': str(academic_class.pk),
             'relationship': 'mother',

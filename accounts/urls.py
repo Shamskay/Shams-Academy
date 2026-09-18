@@ -60,8 +60,4 @@ urlpatterns = [
     path('admin/student-reset-token/', views.admin_generate_student_reset_token, name='admin_generate_student_reset_token'),
     path('student/password-reset-token/', views.student_password_reset_token, name='student_password_reset_token'),
     path('student/password-reset/', views.student_password_reset, name='student_password_reset'),
-    
-    # Parent Password Reset (OTP)
-    path('parent/password-reset-request/', views.parent_password_reset_request, name='parent_password_reset_request'),
-    path('parent/password-reset-verify/', views.parent_password_reset_verify, name='parent_password_reset_verify'),
 ]

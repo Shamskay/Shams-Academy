@@ -107,6 +107,7 @@ class TestParentProfileCreation:
             {
                 'first_name': 'Jane',
                 'last_name': 'Parent',
+                'email': 'jane@test.com',
                 'student_id': student_user.pk,
                 'class_id': str(academic_class.pk),
                 'relationship': 'mother',

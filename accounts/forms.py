@@ -216,38 +216,3 @@ class StudentPasswordResetForm(forms.Form):
             raise forms.ValidationError('Passwords do not match.')
         return cleaned_data
 
-
-class ParentOTPRequestForm(forms.Form):
-    """Parent form to request OTP for password reset"""
-    email = forms.EmailField(required=True, label='Registered Email')
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field_name, field in self.fields.items():
-            field.widget.attrs.update({'class': 'form-control'})
-
-    def clean_email(self):
-        email = self.cleaned_data['email']
-        if not Profile.objects.filter(user__email=email, role=Profile.ROLE_PARENT).exists():
-            raise forms.ValidationError('No parent account found with this email.')
-        return email
-
-
-class ParentOTPVerifyForm(forms.Form):
-    """Parent form to verify OTP and reset password"""
-    otp = forms.CharField(max_length=6, min_length=6, label='6-Digit OTP')
-    password1 = forms.CharField(widget=forms.PasswordInput, label='New Password')
-    password2 = forms.CharField(widget=forms.PasswordInput, label='Confirm Password')
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field_name, field in self.fields.items():
-            field.widget.attrs.update({'class': 'form-control'})
-
-    def clean(self):
-        cleaned_data = super().clean()
-        password1 = cleaned_data.get('password1')
-        password2 = cleaned_data.get('password2')
-        if password1 and password2 and password1 != password2:
-            raise forms.ValidationError('Passwords do not match.')
-        return cleaned_data
