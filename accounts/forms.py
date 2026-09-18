@@ -18,7 +18,7 @@ class StudentActivationTokenForm(forms.Form):
 
 
 class StudentActivationForm(forms.Form):
-    email = forms.EmailField(required=True)
+    email = forms.EmailField(required=False)
     password1 = forms.CharField(widget=forms.PasswordInput, label='Password')
     password2 = forms.CharField(widget=forms.PasswordInput, label='Confirm Password')
 
@@ -37,7 +37,7 @@ class StudentActivationForm(forms.Form):
 
 
 class BaseSignupForm(UserCreationForm):
-    email = forms.EmailField(required=True)
+    email = forms.EmailField(required=False)
     first_name = forms.CharField(max_length=30, required=False)
     last_name = forms.CharField(max_length=30, required=False)
 
