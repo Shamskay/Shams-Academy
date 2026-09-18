@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Results: {{ assessment.title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'staff:staff_dashboard' %}">Dashboard</a></li>
+            {% if assessment_type == 'test' %}
+            <li class="breadcrumb-item"><a href="{% url 'assessments:staff_manage_tests' %}">Tests</a></li>
+            {% else %}
+            <li class="breadcrumb-item"><a href="{% url 'assessments:staff_manage_exams' %}">Exams</a></li>
+            {% endif %}
+            <li class="breadcrumb-item active">Results</li>
+        </ol>
+    </nav>
+    <h1>{{ assessment.title }}</h1>
+    <p class="text-muted">
+        {% if assessment_type == 'test' %}Test{% else %}Exam{% endif %} for
+        {{ assessment.subject.name }} - {{ assessment.academic_class.name }}
+    </p>
+</div>
+
+<div class="card">
+    <div class="card-header bg-transparent">
+        <div class="row">
+            <div class="col">
+                <strong>Term:</strong> {{ assessment.term }}
+            </div>
+            <div class="col">
+                <strong>Date:</strong> {{ assessment.date }}
+            </div>
+            <div class="col">
+                <strong>Max Score:</strong> {{ assessment.max_score }}
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if student_results %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Student</th>
+                        <th>Admission No.</th>
+                        <th>Score</th>
+                        <th>Percentage</th>
+                        <th>Entered By</th>
+                        <th>Submitted</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in student_results %}
+                    {% with result.get_percentage as percentage %}
+                    {% if percentage >= 60 %}
+                        {% cycle 'success' 'info' 'warning' as row_class silent %}
+                    {% else %}
+                        {% cycle 'danger' 'secondary' 'dark' as row_class silent %}
+                    {% endif %}
+                    <tr class="table-{{ row_class|default:'primary' }}">
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            {{ result.student.get_full_name|default:result.student.username }}
+                        </td>
+                                <td>
+                            {{ result.student.profile.admission_number|default:'-' }}
+                        </td>
+                        <td><strong>{{ result.score }} / {{ max_score }}</strong></td>
+                        <td>{{ percentage }}%</td>
+                        <td>{{ result.get_entered_by_display }}</td>
+                        <td>{{ result.submitted_at|date:"M d, Y H:i" }}</td>
+                    </tr>
+                    {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-center py-4">No results entered yet for this {{ assessment_type }}.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-3">
+    <a href="{% url 'assessments:staff_enter_results_table' %}?type={{ assessment_type }}&id={{ assessment.pk }}" class="btn btn-primary">
+        Enter/Edit Results
+    </a>
+</div>
+{% endblock %}

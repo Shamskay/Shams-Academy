@@ -596,6 +596,56 @@ def staff_enter_results_table(request):
     return render(request, 'assessments/staff_enter_results_table.html', context)
 
 
+@staff_required
+def staff_view_test_results(request, pk):
+    """View results for a specific test created by the staff member."""
+    test = get_object_or_404(Test, pk=pk)
+
+    teaching_assignments = ClassSubject.objects.filter(
+        teacher=request.user, is_active=True
+    )
+    if not teaching_assignments.filter(
+        subject=test.subject, academic_class=test.academic_class
+    ).exists():
+        messages.error(request, 'You do not have permission to view this test.')
+        return redirect('assessments:staff_manage_tests')
+
+    student_results = TestResult.objects.filter(test=test).select_related('student').order_by('student__username')
+
+    context = {
+        'assessment': test,
+        'assessment_type': 'test',
+        'student_results': student_results,
+        'max_score': test.max_score,
+    }
+    return render(request, 'assessments/assessment_results.html', context)
+
+
+@staff_required
+def staff_view_exam_results(request, pk):
+    """View results for a specific exam created by the staff member."""
+    exam = get_object_or_404(Exam, pk=pk)
+
+    teaching_assignments = ClassSubject.objects.filter(
+        teacher=request.user, is_active=True
+    )
+    if not teaching_assignments.filter(
+        subject=exam.subject, academic_class=exam.academic_class
+    ).exists():
+        messages.error(request, 'You do not have permission to view this exam.')
+        return redirect('assessments:staff_manage_exams')
+
+    student_results = ExamResult.objects.filter(exam=exam).select_related('student').order_by('student__username')
+
+    context = {
+        'assessment': exam,
+        'assessment_type': 'exam',
+        'student_results': student_results,
+        'max_score': exam.max_score,
+    }
+    return render(request, 'assessments/assessment_results.html', context)
+
+
 @login_required
 def admin_calculate_term_results(request):
     """Calculate term results for all students."""

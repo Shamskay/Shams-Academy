@@ -16,9 +16,11 @@ urlpatterns = [
     path('staff/create-test/', views.staff_create_test, name='staff_create_test'),
     path('staff/manage-tests/', views.staff_manage_tests, name='staff_manage_tests'),
     path('staff/tests/<int:pk>/delete/', views.staff_delete_test, name='staff_delete_test'),
+    path('staff/tests/<int:pk>/results/', views.staff_view_test_results, name='staff_view_test_results'),
     path('staff/create-exam/', views.staff_create_exam, name='staff_create_exam'),
     path('staff/manage-exams/', views.staff_manage_exams, name='staff_manage_exams'),
     path('staff/exams/<int:pk>/delete/', views.staff_delete_exam, name='staff_delete_exam'),
+    path('staff/exams/<int:pk>/results/', views.staff_view_exam_results, name='staff_view_exam_results'),
 
     # Question management
     path('staff/test/<int:assessment_id>/questions/', views.staff_manage_questions, {'assessment_type': 'test'}, name='staff_manage_test_questions'),

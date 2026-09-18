@@ -48,6 +48,9 @@
                             {% endif %}
                         </td>
                         <td>
+                            <a href="{% url 'assessments:staff_view_test_results' t.pk %}" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-eye"></i> Results
+                            </a>
                             <a href="{% url 'assessments:staff_manage_test_questions' t.pk %}" class="btn btn-sm btn-outline-primary">
                                 <i class="bi bi-list-ol"></i> Questions
                             </a>
